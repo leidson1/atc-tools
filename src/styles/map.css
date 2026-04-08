@@ -1,0 +1,111 @@
+/* === Map Container === */
+#map-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  background: #e5e7eb;
+}
+
+/* === Map Overlay (cursor coords) === */
+.map-overlay {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: var(--shadow);
+}
+
+/* === Leaflet Overrides (light theme) === */
+.leaflet-container {
+  font-family: var(--font-main) !important;
+}
+
+/* === Custom Popup Style === */
+.leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.leaflet-popup-tip {
+  background: #ffffff !important;
+}
+
+.leaflet-popup-content {
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+  margin: 10px 14px !important;
+}
+
+.popup-rdl {
+  text-align: center;
+}
+
+.popup-rdl .rdl {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0077b6;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.popup-rdl .detail {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+}
+
+/* === Aerodrome Marker === */
+.aerodrome-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aerodrome-marker-icon {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #0077b6;
+  border-radius: 50%;
+  background: rgba(0, 119, 182, 0.15);
+  position: relative;
+}
+
+.aerodrome-marker-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: #0077b6;
+  border-radius: 50%;
+}
+
+/* === Distance Circles Label === */
+.distance-label {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #0077b6 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+}

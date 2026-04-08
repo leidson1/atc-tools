@@ -1,0 +1,443 @@
+/* === Left Panel === */
+#panel {
+  width: 340px;
+  min-width: 340px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.05);
+}
+
+.panel-section {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-section h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-header h2 {
+  margin-bottom: 0;
+}
+
+/* === Aerodrome Info Card === */
+.info-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-top: 10px;
+  box-shadow: var(--shadow);
+}
+
+.info-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.info-detail {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.info-detail:last-child {
+  border-bottom: none;
+}
+
+.info-detail span:first-child {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.info-detail span:last-child {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* === Search Results === */
+.search-results {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-md);
+}
+
+.search-result-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  transition: background var(--transition);
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background: var(--accent-light);
+}
+
+.search-result-item .icao {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.search-result-item .name {
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+/* === Base Section === */
+.base-section .info-card {
+  border-left-color: #0077b6;
+  background: #eff6ff;
+}
+
+/* === Target Section === */
+.target-section .input-group input {
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+  padding: 12px;
+}
+
+.target-section .btn-primary {
+  padding: 12px 20px;
+  font-size: 14px;
+}
+
+/* === RDL Target Name === */
+.rdl-target-name {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.rdl-header {
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.form-hint {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* === Cache Stats === */
+.cache-stats {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+/* === Sync Progress === */
+.sync-progress {
+  margin-top: 12px;
+}
+
+.sync-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-card);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.sync-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.sync-info {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.btn-sync {
+  background: #16a34a;
+  margin-top: 8px;
+}
+
+.btn-sync:hover {
+  background: #15803d;
+}
+
+.btn-sync:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* === Coordinate Input === */
+.coord-formats {
+  margin: 4px 0 12px;
+}
+
+.coord-formats small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.hint {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.hint small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* === RDL Result Display === */
+.rdl-display {
+  background: #f0fdf4;
+  border: 2px solid var(--success);
+  border-radius: var(--radius);
+  padding: 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.rdl-main {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.rdl-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.rdl-value {
+  font-size: 36px;
+  font-weight: 800;
+  color: #15803d;
+  font-family: var(--font-mono);
+  letter-spacing: 2px;
+}
+
+.rdl-details {
+  margin-bottom: 12px;
+}
+
+.rdl-detail {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+.rdl-detail span:first-child {
+  color: var(--text-muted);
+}
+
+.rdl-detail span:last-child {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* === History === */
+.history-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.history-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 16px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+
+.history-item:hover {
+  background: var(--bg-hover);
+}
+
+.history-rdl {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.history-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* === Modal === */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 420px;
+  max-width: 90vw;
+  box-shadow: var(--shadow-md);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.modal-header .btn-icon {
+  color: var(--text-muted);
+}
+
+.modal-header .btn-icon:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+/* === Toast Notifications === */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+  animation: slideIn 0.3s ease;
+  max-width: 300px;
+}
+
+.toast.success {
+  border-left: 4px solid var(--success);
+  background: #f0fdf4;
+}
+
+.toast.error {
+  border-left: 4px solid var(--error);
+  background: #fef2f2;
+}
+
+.toast.info {
+  border-left: 4px solid var(--accent);
+  background: #eff6ff;
+}
+
+.toast.warning {
+  border-left: 4px solid var(--warning);
+  background: #fffbeb;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}

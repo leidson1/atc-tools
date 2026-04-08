@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Radiais - ATC Tools</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header id="header">
+      <div class="header-left">
+        <h1>Sistema de Radiais</h1>
+        <span class="subtitle">ATC Tools</span>
+      </div>
+      <div class="header-center">
+        <span class="base-indicator">BASE:</span>
+        <span class="base-icao" id="header-base-icao">SBPJ</span>
+      </div>
+      <div class="header-right">
+        <span id="connection-status" class="status-indicator">--</span>
+        <button id="btn-settings" class="btn-icon" title="Configurações">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main">
+      <!-- Left Panel -->
+      <aside id="panel">
+        <!-- Base Aerodrome (fixed, set in settings) -->
+        <section class="panel-section base-section">
+          <h2>Aeródromo Base</h2>
+          <div id="base-info" class="info-card">
+            <div class="info-name" id="base-name">Carregando...</div>
+            <div class="info-detail"><span>ICAO:</span> <span id="base-icao">--</span></div>
+            <div class="info-detail"><span>Cidade:</span> <span id="base-city">--</span></div>
+            <div class="info-detail"><span>ARP:</span> <span id="base-arp">--</span></div>
+            <div class="info-detail"><span>Elevação:</span> <span id="base-elev">--</span></div>
+            <div class="info-detail"><span>Var Mag:</span> <span id="base-var">--</span></div>
+          </div>
+        </section>
+
+        <!-- Target Aerodrome Input -->
+        <section class="panel-section target-section">
+          <h2>Consultar AD - RDL / Distância</h2>
+          <div class="input-group">
+            <input type="text" id="target-input" placeholder="Digite o ICAO (ex: SDNC)" maxlength="4" autocomplete="off" />
+            <button id="btn-calculate" class="btn-primary">BUSCAR</button>
+          </div>
+          <div id="target-search-results" class="search-results hidden"></div>
+          <div class="hint">
+            <small>Digite o indicativo ICAO do aeródromo e pressione Enter ou clique em Buscar</small>
+          </div>
+        </section>
+
+        <!-- Result Section -->
+        <section class="panel-section" id="result-section">
+          <h2>Resultado</h2>
+          <div id="rdl-result" class="rdl-display hidden">
+            <div class="rdl-header">
+              <span id="rdl-target-name" class="rdl-target-name">--</span>
+            </div>
+            <div class="rdl-main">
+              <span class="rdl-label">RDL de <span id="rdl-base-icao">SBPJ</span></span>
+              <span class="rdl-value" id="rdl-value">---/--.-</span>
+            </div>
+            <div class="rdl-details">
+              <div class="rdl-detail"><span>Radial Mag:</span> <span id="rdl-mag">--</span></div>
+              <div class="rdl-detail"><span>Radial True:</span> <span id="rdl-true">--</span></div>
+              <div class="rdl-detail"><span>Distância:</span> <span id="rdl-dist">--</span></div>
+              <div class="rdl-detail"><span>Declinação:</span> <span id="rdl-decl">--</span></div>
+            </div>
+            <button id="btn-copy-rdl" class="btn-secondary btn-full">Copiar RDL</button>
+          </div>
+        </section>
+
+        <!-- History Section -->
+        <section class="panel-section">
+          <div class="section-header">
+            <h2>Histórico</h2>
+            <button id="btn-clear-history" class="btn-text" title="Limpar histórico">Limpar</button>
+          </div>
+          <div id="history-list" class="history-list">
+            <div class="history-empty">Nenhuma consulta realizada</div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Map Area -->
+      <div id="map-container">
+        <div id="map"></div>
+        <div id="map-coords" class="map-overlay">
+          <span id="cursor-coords">--</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Configurações</h2>
+          <button id="btn-close-settings" class="btn-icon">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="settings-api-key">API Key (AIS Web)</label>
+            <input type="text" id="settings-api-key" placeholder="Sua API Key" />
+          </div>
+          <div class="form-group">
+            <label for="settings-api-pass">API Pass (AIS Web)</label>
+            <input type="password" id="settings-api-pass" placeholder="Sua API Pass" />
+          </div>
+          <div class="form-group">
+            <label for="settings-default-aero">Aeródromo Base</label>
+            <input type="text" id="settings-default-aero" placeholder="SBPJ" maxlength="4" />
+            <small class="form-hint">O aeródromo de referência para todos os cálculos de RDL</small>
+          </div>
+          <button id="btn-save-settings" class="btn-primary btn-full">Salvar Configurações</button>
+
+          <hr style="margin: 20px 0; border-color: var(--border);" />
+
+          <div class="form-group">
+            <label>Banco de Dados ROTAER</label>
+            <div id="cache-stats" class="cache-stats">
+              <span id="stats-text">Carregando...</span>
+            </div>
+          </div>
+          <button id="btn-sync-rotaer" class="btn-primary btn-full btn-sync">
+            Sincronizar ROTAER Completo
+          </button>
+          <small class="form-hint">Baixa TODOS os aeródromos do Brasil (~6000) da API por estado. Funciona 100% offline depois.</small>
+          <div id="sync-progress-container" class="sync-progress hidden">
+            <div class="sync-bar-bg">
+              <div class="sync-bar" id="sync-bar"></div>
+            </div>
+            <div class="sync-info">
+              <span id="sync-status">--</span>
+              <span id="sync-count">0/0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "identifier": "default",
+  "description": "Default capabilities for ATC Tools",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "store:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "http://www.aisweb.aer.mil.br/**" },
+        { "url": "https://aisweb.decea.mil.br/**" },
+        { "url": "https://api.decea.mil.br/**" }
+      ]
+    }
+  ]
+}

@@ -118,8 +118,8 @@ async function onCalculateClick() {
   }
 
   const targetIcao = document.getElementById('target-input').value.trim().toUpperCase();
-  if (!targetIcao || targetIcao.length < 4) {
-    showToast('Digite o indicativo ICAO do aeródromo (4 letras)', 'warning');
+  if (!targetIcao || targetIcao.length < 2) {
+    showToast('Digite o indicativo (AD, fixo ou waypoint)', 'warning');
     document.getElementById('target-input').focus();
     return;
   }

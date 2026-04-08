@@ -34,7 +34,7 @@ function renderHistory() {
     .map(
       (r, i) =>
         `<div class="history-item" data-index="${i}">
-          <span class="history-rdl">${r.aerodrome_icao} ${r.formatted}</span>
+          <span class="history-rdl">${r.target_icao || '?'} ${r.formatted}</span>
           <span class="history-meta">${formatTimestamp(r.timestamp)}</span>
         </div>`
     )
@@ -73,8 +73,9 @@ export function initCopyButton() {
   const btn = document.getElementById('btn-copy-rdl');
   btn.addEventListener('click', () => {
     const value = document.getElementById('rdl-value').textContent;
-    const icao = history.length > 0 ? history[0].aerodrome_icao : '';
-    const text = `${icao} RDL ${value}`;
+    const target = history.length > 0 ? (history[0].target_icao || '') : '';
+    const base = history.length > 0 ? history[0].aerodrome_icao : '';
+    const text = `${target} RDL ${base} ${value}`;
 
     navigator.clipboard.writeText(text).then(() => {
       showToast('Copiado: ' + text, 'success');

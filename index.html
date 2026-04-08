@@ -19,6 +19,11 @@
         <span class="base-icao" id="header-base-icao">SBPJ</span>
       </div>
       <div class="header-right">
+        <div class="layer-toggles">
+          <button id="btn-toggle-fir" class="btn-layer" title="Limites das FIRs">FIR</button>
+          <button id="btn-toggle-tma" class="btn-layer" title="TMAs - Áreas Terminais">TMA</button>
+          <button id="btn-toggle-ctr" class="btn-layer" title="CTRs - Zonas de Controle">CTR</button>
+        </div>
         <span id="connection-status" class="status-indicator">--</span>
         <button id="btn-settings" class="btn-icon" title="Configurações">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -42,6 +47,7 @@
             <div class="info-detail"><span>ARP:</span> <span id="base-arp">--</span></div>
             <div class="info-detail"><span>Elevação:</span> <span id="base-elev">--</span></div>
             <div class="info-detail"><span>Var Mag:</span> <span id="base-var">--</span></div>
+            <div class="info-detail"><span>FIR:</span> <span id="base-fir">--</span></div>
           </div>
         </section>
 
@@ -74,6 +80,7 @@
               <div class="rdl-detail"><span>Radial True:</span> <span id="rdl-true">--</span></div>
               <div class="rdl-detail"><span>Distância:</span> <span id="rdl-dist">--</span></div>
               <div class="rdl-detail"><span>Declinação:</span> <span id="rdl-decl">--</span></div>
+              <div class="rdl-detail"><span>FIR:</span> <span id="rdl-fir">--</span></div>
             </div>
             <button id="btn-copy-rdl" class="btn-secondary btn-full">Copiar RDL</button>
           </div>
@@ -109,14 +116,6 @@
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label for="settings-api-key">API Key (AIS Web)</label>
-            <input type="text" id="settings-api-key" placeholder="Sua API Key" />
-          </div>
-          <div class="form-group">
-            <label for="settings-api-pass">API Pass (AIS Web)</label>
-            <input type="password" id="settings-api-pass" placeholder="Sua API Pass" />
-          </div>
-          <div class="form-group">
             <label for="settings-default-aero">Aeródromo Base</label>
             <input type="text" id="settings-default-aero" placeholder="SBPJ" maxlength="4" />
             <small class="form-hint">O aeródromo de referência para todos os cálculos de RDL</small>
@@ -126,25 +125,46 @@
           <hr style="margin: 20px 0; border-color: var(--border);" />
 
           <div class="form-group">
-            <label>Banco de Dados ROTAER</label>
+            <label>Banco de Dados</label>
             <div id="cache-stats" class="cache-stats">
               <span id="stats-text">Carregando...</span>
             </div>
           </div>
-          <button id="btn-sync-rotaer" class="btn-primary btn-full btn-sync">
-            Sincronizar ROTAER Completo
-          </button>
-          <small class="form-hint">Baixa TODOS os aeródromos do Brasil (~6000) da API por estado. Funciona 100% offline depois.</small>
-          <div id="sync-progress-container" class="sync-progress hidden">
-            <div class="sync-bar-bg">
-              <div class="sync-bar" id="sync-bar"></div>
-            </div>
-            <div class="sync-info">
-              <span id="sync-status">--</span>
-              <span id="sync-count">0/0</span>
-            </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Welcome Screen (first run only) -->
+    <div id="welcome-screen" class="welcome-screen hidden">
+      <div class="welcome-card">
+        <div class="welcome-logo">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="32" r="28" stroke="#0077b6" stroke-width="2" fill="rgba(0,119,182,0.1)"/>
+            <circle cx="32" cy="32" r="18" stroke="#0077b6" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+            <circle cx="32" cy="32" r="8" stroke="#0077b6" stroke-width="1" fill="none" stroke-dasharray="3 3"/>
+            <line x1="32" y1="2" x2="32" y2="62" stroke="#0077b6" stroke-width="1" opacity="0.4"/>
+            <line x1="2" y1="32" x2="62" y2="32" stroke="#0077b6" stroke-width="1" opacity="0.4"/>
+            <circle cx="32" cy="32" r="3" fill="#0077b6"/>
+          </svg>
+        </div>
+        <h1 class="welcome-title">Sistema de Radiais</h1>
+        <p class="welcome-subtitle">ATC Tools</p>
+        <p class="welcome-desc">
+          Ferramenta de cálculo de RDL (Radial e Distância) para Controle de Tráfego Aéreo.
+          Com 5.190 aeródromos e 6.756 waypoints do Brasil.
+        </p>
+
+        <div class="welcome-form">
+          <label class="welcome-label">Selecione seu Aeródromo Base</label>
+          <p class="welcome-hint">Esse será o aeródromo de referência para todos os cálculos de RDL. Você pode alterar depois nas configurações.</p>
+          <input type="text" id="welcome-ad-input" class="welcome-input" placeholder="Digite o ICAO (ex: SBPJ, SBMA, SBBR)" maxlength="4" autocomplete="off" />
+          <div id="welcome-ad-info" class="welcome-ad-info hidden">
+            <span id="welcome-ad-name">--</span>
           </div>
         </div>
+
+        <button id="btn-welcome-start" class="btn-primary btn-full welcome-btn" disabled>INICIAR</button>
+        <p class="welcome-version">v0.1.0</p>
       </div>
     </div>
 

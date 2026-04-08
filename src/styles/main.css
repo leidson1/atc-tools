@@ -108,6 +108,37 @@ body {
   letter-spacing: 1px;
 }
 
+/* === Layer Toggle Buttons === */
+.layer-toggles {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-layer {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.5px;
+}
+
+.btn-layer.active {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.btn-layer:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .header-right {
   display: flex;
   align-items: center;

@@ -6,16 +6,26 @@ import './styles/components.css';
 import { calculateRdl, getAerodromeInfo, lookupPoint } from './api.js';
 import { initMap, setAerodrome, showRdlOnMap } from './map.js';
 import { drawCompassRose } from './compass-rose.js';
+import { initAirspaceLayers, toggleLayer } from './airspace-layers.js';
+import { getFirForPoint, getFirInfo } from './fir-data.js';
 import { displayResult, clearHistory, initCopyButton, showToast } from './results-panel.js';
 import { initSettings, getDefaultAerodrome } from './settings.js';
+import { showWelcomeIfNeeded } from './welcome.js';
+import { checkForUpdates } from './updater.js';
 
 // App state
 let baseAerodrome = null;
 let map = null;
 
 async function init() {
+  // Show welcome screen on first run - waits for user to select base AD
+  const selectedBase = await showWelcomeIfNeeded();
+
   // Initialize map
   map = initMap('map', onMapClick);
+
+  // Initialize airspace layers
+  initAirspaceLayers(map);
 
   // Initialize settings
   initSettings(onSettingsSave);
@@ -43,6 +53,11 @@ async function init() {
   // Clear history button
   document.getElementById('btn-clear-history').addEventListener('click', clearHistory);
 
+  // Layer toggle buttons
+  setupLayerToggle('btn-toggle-fir', 'fir', 'FIR');
+  setupLayerToggle('btn-toggle-tma', 'tma', 'TMA');
+  setupLayerToggle('btn-toggle-ctr', 'ctr', 'CTR');
+
   // History click handler
   window.__onHistoryClick = (result) => {
     displayResult(result);
@@ -61,6 +76,9 @@ async function init() {
 
   // Focus on target input
   targetInput.focus();
+
+  // Check for updates (non-blocking)
+  checkForUpdates();
 }
 
 async function loadBaseAerodrome() {
@@ -69,7 +87,6 @@ async function loadBaseAerodrome() {
     const info = await getAerodromeInfo(defaultIcao);
     setBaseAerodrome(info);
   } catch (err) {
-    // Fallback to SBPJ from hardcoded
     try {
       const info = await getAerodromeInfo('SBPJ');
       setBaseAerodrome(info);
@@ -82,6 +99,10 @@ async function loadBaseAerodrome() {
 function setBaseAerodrome(info) {
   baseAerodrome = info;
 
+  // Determine FIR
+  const baseFir = getFirForPoint(info.arp_lat, info.arp_lon);
+  const firInfo = getFirInfo(baseFir);
+
   // Update header
   document.getElementById('header-base-icao').textContent = info.icao_code;
 
@@ -91,6 +112,8 @@ function setBaseAerodrome(info) {
   document.getElementById('base-city').textContent = `${info.city}/${info.state}`;
   document.getElementById('base-arp').textContent = `${info.arp_lat.toFixed(4)}, ${info.arp_lon.toFixed(4)}`;
   document.getElementById('base-elev').textContent = `${info.elevation_ft} ft`;
+  document.getElementById('base-fir').textContent = `${baseFir} (${firInfo.label})`;
+  document.getElementById('base-fir').style.color = firInfo.color;
 
   const varMag = info.magnetic_variation;
   document.getElementById('base-var').textContent = varMag
@@ -108,7 +131,7 @@ function setBaseAerodrome(info) {
   const decl = varMag || -21;
   drawCompassRose(map, info.arp_lat, info.arp_lon, decl);
 
-  updateStatus(`Base: ${info.icao_code}`);
+  updateStatus(`Base: ${info.icao_code} | ${baseFir}`);
 }
 
 async function onCalculateClick() {
@@ -124,39 +147,49 @@ async function onCalculateClick() {
     return;
   }
 
-  // Show loading state
   const btn = document.getElementById('btn-calculate');
   const originalText = btn.textContent;
   btn.textContent = 'Buscando...';
   btn.disabled = true;
 
   try {
-    // Step 1: Lookup the point (AD or FIX) - fetches from cache or API automatically
     const point = await lookupPoint(targetIcao);
 
-    // Step 2: Calculate RDL from base to target
     const result = await calculateRdl(
       baseAerodrome.icao_code,
       point.lat,
       point.lon
     );
 
-    // Add target info to result for display
+    // Add target info
     result.target_name = point.name;
     result.target_icao = point.identifier;
     result.target_type = point.point_type;
     result.target_info = point.info;
 
-    // Step 3: Display result
+    // Determine FIR of target
+    const targetFir = getFirForPoint(point.lat, point.lon);
+    const firInfo = getFirInfo(targetFir);
+    result.target_fir = targetFir;
+    result.target_fir_label = firInfo.label;
+
+    // Display result
     displayResult(result);
     showRdlOnMap(result);
 
-    // Update target name in result section
+    // Update target name with FIR
     const typeLabel = point.point_type === 'AD' ? '' : `[${point.point_type}] `;
     document.getElementById('rdl-target-name').textContent =
       `${typeLabel}${point.identifier} - ${point.name} ${point.info ? '(' + point.info + ')' : ''}`;
 
-    showToast(`${targetIcao}: RDL ${result.formatted}`, 'success');
+    // Show FIR in result
+    const firEl = document.getElementById('rdl-fir');
+    if (firEl) {
+      firEl.textContent = `${targetFir} (${firInfo.label})`;
+      firEl.style.color = firInfo.color;
+    }
+
+    showToast(`${targetIcao}: RDL ${result.formatted} | FIR ${targetFir}`, 'success');
   } catch (err) {
     showToast(`Erro ao buscar ${targetIcao}: ${err}`, 'error');
   } finally {
@@ -176,11 +209,22 @@ async function onMapClick(lat, lon) {
     const result = await calculateRdl(baseAerodrome.icao_code, lat, lon);
     result.target_name = `Ponto no mapa`;
     result.target_icao = 'MAP';
+
+    const targetFir = getFirForPoint(lat, lon);
+    const firInfo = getFirInfo(targetFir);
+    result.target_fir = targetFir;
+
     displayResult(result);
     showRdlOnMap(result);
 
     document.getElementById('rdl-target-name').textContent =
       `Ponto: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+
+    const firEl = document.getElementById('rdl-fir');
+    if (firEl) {
+      firEl.textContent = `${targetFir} (${firInfo.label})`;
+      firEl.style.color = firInfo.color;
+    }
   } catch (err) {
     showToast(`Erro no cálculo: ${err}`, 'error');
   }
@@ -196,6 +240,16 @@ async function onSettingsSave(config) {
       showToast(`Erro ao carregar ${config.defaultAerodrome}: ${err}`, 'error');
     }
   }
+}
+
+function setupLayerToggle(btnId, layerType, label) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const visible = toggleLayer(layerType);
+    btn.textContent = visible ? `${label}` : `${label}`;
+    btn.classList.toggle('active', visible);
+  });
 }
 
 function updateStatus(text) {

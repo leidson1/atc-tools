@@ -98,6 +98,24 @@
   border-radius: 50%;
 }
 
+/* === Airspace Tooltip === */
+.airspace-tooltip {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  font-family: var(--font-mono) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+/* === Airspace Labels === */
+.airspace-label {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 /* === Distance Circles Label === */
 .distance-label {
   background: none !important;

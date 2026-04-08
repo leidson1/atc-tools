@@ -1,3 +1,200 @@
+/* === Welcome Screen === */
+.welcome-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #f0f2f5 0%, #e0e7ef 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5000;
+}
+
+.welcome-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 48px 40px;
+  width: 440px;
+  max-width: 90vw;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  text-align: center;
+}
+
+.welcome-logo {
+  margin-bottom: 16px;
+}
+
+.welcome-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin-bottom: 4px;
+}
+
+.welcome-subtitle {
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.welcome-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.welcome-form {
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.welcome-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.welcome-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.welcome-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.welcome-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(0, 119, 182, 0.15);
+}
+
+.welcome-ad-info {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.welcome-ad-info span {
+  font-size: 13px;
+  color: #15803d;
+  font-weight: 600;
+}
+
+.welcome-btn {
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.welcome-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.welcome-version {
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* === Update Banner === */
+.update-banner {
+  position: fixed;
+  top: 52px;
+  left: 0;
+  right: 0;
+  background: #eff6ff;
+  border-bottom: 2px solid #0077b6;
+  padding: 10px 20px;
+  z-index: 3000;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.update-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.update-text {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.update-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-update-install {
+  background: #0077b6;
+  color: #fff;
+  border: none;
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-update-install:hover {
+  background: #005f8f;
+}
+
+.btn-update-install:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.btn-update-dismiss {
+  background: none;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-update-dismiss:hover {
+  background: var(--bg-hover);
+}
+
 /* === Compass Rose SVG === */
 .compass-rose-container {
   pointer-events: none;

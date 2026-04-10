@@ -1,0 +1,79 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: 'src-tauri -> target'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'ATC Tools - Sistema de Radiais ${{ github.ref_name }}'
+          releaseBody: |
+            ## Sistema de Radiais - ATC Tools ${{ github.ref_name }}
+
+            ### Dados Embutidos (100% Offline)
+            - **5.190 aeródromos** (ROTAER)
+            - **7.978 waypoints/fixos/VOR/NDB** (GeoServer DECEA)
+            - **107 TMAs** + **64 CTRs** + **5 FIRs** (polígonos oficiais DECEA)
+
+            ### Download
+            - **Setup.exe** - Instalador Windows
+            - **MSI** - Instalador Windows
+
+            ### Changelog
+            Ver commits para detalhes das mudanças.
+          releaseDraft: false
+          prerelease: false
+
+      # SignPath signing step (uncomment after approval)
+      # - name: Upload artifacts for signing
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: unsigned-artifacts
+      #     path: |
+      #       src-tauri/target/release/bundle/nsis/*.exe
+      #       src-tauri/target/release/bundle/msi/*.msi
+      #
+      # - name: Sign with SignPath
+      #   uses: signpath/github-actions-submit@v1
+      #   with:
+      #     api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+      #     organization-id: '${{ secrets.SIGNPATH_ORG_ID }}'
+      #     project-slug: 'atc-tools'
+      #     signing-policy-slug: 'release-signing'
+      #     artifact-configuration-slug: 'default'
+      #     wait-for-completion: true
+      #     github-artifact-id: '${{ steps.upload.outputs.artifact-id }}'

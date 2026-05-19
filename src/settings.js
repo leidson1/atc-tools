@@ -33,9 +33,7 @@ export function initSettings(onSave) {
     const defaultAero = document.getElementById('settings-default-aero').value.trim().toUpperCase();
 
     try {
-      // Keep existing API keys (hardcoded), just update aerodrome
-      const config = await getApiConfig();
-      await saveApiConfig(config.api_key, config.api_pass, defaultAero);
+      await saveApiConfig(null, null, defaultAero);
       showToast('Configurações salvas!', 'success');
       modal.classList.add('hidden');
 

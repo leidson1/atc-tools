@@ -1,41 +1,111 @@
-import { invoke } from '@tauri-apps/api/core';
+import {
+  getAerodrome,
+  getWaypoint,
+  listAerodromes,
+  searchAerodromes,
+  getStats,
+} from './lib/data-loader.js';
+import { trueBearing, normalizeBearing } from './lib/bearing.js';
+import { distanceNm } from './lib/haversine.js';
+import { magneticDeclination } from './lib/magnetic.js';
+import { getConfig, saveConfig } from './lib/storage.js';
+
+function aerodromeToNavPoint(info) {
+  return {
+    identifier: info.icao_code,
+    point_type: 'AD',
+    name: info.name,
+    lat: info.arp_lat,
+    lon: info.arp_lon,
+    info: `${info.city}/${info.state}`,
+  };
+}
 
 export async function searchAerodrome(query) {
-  return invoke('search_aerodrome', { query });
+  return searchAerodromes(query);
 }
 
 export async function getAerodromeInfo(icao) {
-  return invoke('get_aerodrome_info', { icao });
+  const info = getAerodrome(icao);
+  if (!info) {
+    throw new Error(`Aeródromo ${icao.toUpperCase()} não encontrado`);
+  }
+  return info;
 }
 
 export async function listCachedAerodromes() {
-  return invoke('list_cached_aerodromes');
+  return listAerodromes()
+    .map((a) => ({
+      icao_code: a.icao_code,
+      name: a.name,
+      city: a.city,
+      state: a.state,
+    }))
+    .sort((a, b) => a.icao_code.localeCompare(b.icao_code));
 }
 
 export async function calculateRdl(aerodromeIcao, pointLat, pointLon) {
-  return invoke('calculate_rdl', { aerodromeIcao, pointLat, pointLon });
+  const icao = aerodromeIcao.toUpperCase();
+  const aero = getAerodrome(icao);
+  if (!aero) {
+    throw new Error(`Aeródromo ${icao} não encontrado`);
+  }
+
+  const trueBrg = trueBearing(aero.arp_lat, aero.arp_lon, pointLat, pointLon);
+
+  const decl =
+    aero.magnetic_variation != null
+      ? aero.magnetic_variation
+      : magneticDeclination(aero.arp_lat, aero.arp_lon);
+
+  const magBrg = normalizeBearing(trueBrg - decl);
+  const dist = distanceNm(aero.arp_lat, aero.arp_lon, pointLat, pointLon);
+
+  const formatted = `${String(Math.round(magBrg)).padStart(3, '0')}/${dist.toFixed(1)}`;
+
+  return {
+    radial_magnetic: Math.round(magBrg * 10) / 10,
+    radial_true: Math.round(trueBrg * 10) / 10,
+    distance_nm: Math.round(dist * 10) / 10,
+    magnetic_declination: decl,
+    aerodrome_icao: icao,
+    aerodrome_name: aero.name,
+    aerodrome_lat: aero.arp_lat,
+    aerodrome_lon: aero.arp_lon,
+    point_lat: pointLat,
+    point_lon: pointLon,
+    formatted,
+    timestamp: String(Math.floor(Date.now() / 1000)),
+  };
 }
 
 export async function calculateRdlBatch(aerodromeIcao, points) {
-  return invoke('calculate_rdl_batch', { aerodromeIcao, points });
+  return Promise.all(
+    points.map((p) => calculateRdl(aerodromeIcao, p.lat, p.lon))
+  );
 }
 
 export async function lookupPoint(identifier) {
-  return invoke('lookup_point', { identifier });
-}
+  const id = identifier.trim().toUpperCase();
 
-export async function syncRotaer() {
-  return invoke('sync_rotaer');
+  const aero = getAerodrome(id);
+  if (aero) return aerodromeToNavPoint(aero);
+
+  const wpt = getWaypoint(id);
+  if (wpt) return wpt;
+
+  throw new Error(`'${id}' não encontrado como aeródromo nem como waypoint.`);
 }
 
 export async function getCacheStats() {
-  return invoke('get_cache_stats');
+  return getStats();
 }
 
 export async function getApiConfig() {
-  return invoke('get_api_config');
+  return getConfig();
 }
 
-export async function saveApiConfig(apiKey, apiPass, defaultAerodrome) {
-  return invoke('save_api_config', { apiKey, apiPass, defaultAerodrome });
+export async function saveApiConfig(_apiKey, _apiPass, defaultAerodrome) {
+  const icao = (defaultAerodrome || 'SBPJ').toUpperCase();
+  saveConfig({ default_aerodrome: icao });
 }

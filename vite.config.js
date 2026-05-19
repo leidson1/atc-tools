@@ -1,15 +1,27 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vite';
+import { viteSingleFile } from 'vite-plugin-singlefile';
+
+const singleFile = process.env.SINGLE_FILE === '1';
 
 export default defineConfig({
+  base: singleFile ? './' : '/atc-tools/',
+  plugins: singleFile ? [viteSingleFile()] : [],
   clearScreen: false,
   server: {
     port: 1420,
     strictPort: false,
   },
-  envPrefix: ['VITE_', 'TAURI_'],
   build: {
     target: ['es2021', 'chrome100', 'safari15'],
-    minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
-    sourcemap: !!process.env.TAURI_DEBUG,
+    minify: 'esbuild',
+    assetsInlineLimit: singleFile ? 100_000_000 : 4096,
+    cssCodeSplit: !singleFile,
+    rollupOptions: singleFile
+      ? {
+          output: {
+            inlineDynamicImports: true,
+          },
+        }
+      : undefined,
   },
-})
+});

@@ -1,13 +1,16 @@
 {
   "name": "atc-tools",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:single": "SINGLE_FILE=1 vite build --outDir dist-single",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync-data": "node scripts/sync-all.mjs",
+    "sync-aerodromes": "node scripts/sync-aerodromes.mjs",
+    "sync-waypoints": "node scripts/sync-waypoints.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4"

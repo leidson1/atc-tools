@@ -11,6 +11,8 @@ import { getFirForPoint, getFirInfo } from './fir-data.js';
 import { displayResult, clearHistory, initCopyButton, showToast } from './results-panel.js';
 import { initSettings, getDefaultAerodrome } from './settings.js';
 import { showWelcomeIfNeeded } from './welcome.js';
+import { initDrawer, closeDrawerIfMobile } from './drawer.js';
+import { initVersionIndicator } from './version-indicator.js';
 
 // App state
 let baseAerodrome = null;
@@ -31,6 +33,12 @@ async function init() {
 
   // Initialize copy button
   initCopyButton();
+
+  // Initialize mobile drawer
+  initDrawer();
+
+  // Initialize version indicator (offline build only)
+  initVersionIndicator();
 
   // Target input - Enter to calculate
   const targetInput = document.getElementById('target-input');
@@ -186,6 +194,7 @@ async function onCalculateClick() {
     }
 
     showToast(`${targetIcao}: RDL ${result.formatted} | FIR ${targetFir}`, 'success');
+    closeDrawerIfMobile();
   } catch (err) {
     showToast(`Erro ao buscar ${targetIcao}: ${err}`, 'error');
   } finally {

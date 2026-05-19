@@ -10,6 +10,11 @@
     <!-- Header -->
     <header id="header">
       <div class="header-left">
+        <button id="btn-toggle-panel" class="btn-icon btn-hamburger" title="Menu" aria-label="Abrir painel">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
         <h1>Sistema de Radiais</h1>
         <span class="subtitle">ATC Tools</span>
       </div>
@@ -36,6 +41,11 @@
     <main id="main">
       <!-- Left Panel -->
       <aside id="panel">
+        <button id="btn-close-panel" class="btn-icon btn-close-drawer" title="Fechar" aria-label="Fechar painel">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
         <!-- Base Aerodrome (fixed, set in settings) -->
         <section class="panel-section base-section">
           <h2>Aeródromo Base</h2>
@@ -106,6 +116,9 @@
       </div>
     </main>
 
+    <!-- Drawer backdrop (mobile only) -->
+    <div id="panel-backdrop" class="panel-backdrop hidden"></div>
+
     <!-- Settings Modal -->
     <div id="settings-modal" class="modal hidden">
       <div class="modal-content">
@@ -163,7 +176,7 @@
         </div>
 
         <button id="btn-welcome-start" class="btn-primary btn-full welcome-btn" disabled>INICIAR</button>
-        <p class="welcome-version">v0.3.0 (web)</p>
+        <p class="welcome-version">v0.4.0</p>
       </div>
     </div>
 

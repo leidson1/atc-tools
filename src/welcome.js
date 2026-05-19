@@ -82,8 +82,7 @@ export function showWelcomeIfNeeded() {
 
       // Save the selection
       try {
-        const config = await getApiConfig();
-        await saveApiConfig(config.api_key, config.api_pass, selectedIcao);
+        await saveApiConfig(null, null, selectedIcao);
       } catch {
         // Ignore save errors
       }

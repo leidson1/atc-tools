@@ -11,7 +11,6 @@ import { getFirForPoint, getFirInfo } from './fir-data.js';
 import { displayResult, clearHistory, initCopyButton, showToast } from './results-panel.js';
 import { initSettings, getDefaultAerodrome } from './settings.js';
 import { showWelcomeIfNeeded } from './welcome.js';
-import { checkForUpdates } from './updater.js';
 
 // App state
 let baseAerodrome = null;
@@ -76,9 +75,6 @@ async function init() {
 
   // Focus on target input
   targetInput.focus();
-
-  // Check for updates (non-blocking)
-  checkForUpdates();
 }
 
 async function loadBaseAerodrome() {

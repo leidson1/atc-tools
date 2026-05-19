@@ -293,3 +293,162 @@ input[type="password"]::placeholder {
 ::-webkit-scrollbar-thumb:hover {
   background: #a0a7af;
 }
+
+/* === Drawer (hamburger + close, hidden on desktop) === */
+.btn-hamburger,
+.btn-close-drawer {
+  display: none;
+}
+
+.panel-backdrop {
+  display: none;
+}
+
+/* === Mobile (< 768px) === */
+@media (max-width: 768px) {
+  body { font-size: 15px; }
+
+  #header {
+    padding: 8px 12px;
+    height: 52px;
+  }
+
+  .header-left { gap: 6px; }
+  .header-left h1 { font-size: 15px; }
+  .subtitle { display: none; }
+
+  .header-center { display: none; }
+
+  .header-right { gap: 4px; }
+  .layer-toggles { gap: 2px; }
+  .btn-layer { padding: 4px 6px; font-size: 10px; min-height: 32px; }
+  .status-indicator { display: none; }
+
+  .btn-hamburger {
+    display: flex;
+    margin-right: 2px;
+    padding: 8px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  #main { position: relative; }
+
+  #panel {
+    position: fixed;
+    top: 52px;
+    left: 0;
+    bottom: 0;
+    width: 88vw;
+    max-width: 360px;
+    min-width: 0;
+    z-index: 900;
+    transform: translateX(-100%);
+    transition: transform 220ms ease-out;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.2);
+  }
+  #panel.open { transform: translateX(0); }
+
+  .btn-close-drawer {
+    display: flex;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    min-width: 40px;
+    min-height: 40px;
+    z-index: 10;
+  }
+
+  .panel-backdrop {
+    display: block;
+    position: fixed;
+    top: 52px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 800;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease-out;
+  }
+  .panel-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  #map-container { width: 100%; }
+
+  /* Touch-friendly inputs/buttons */
+  input[type="text"],
+  input[type="password"] {
+    font-size: 16px; /* prevents iOS auto-zoom */
+    padding: 12px 14px;
+  }
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px;
+    font-size: 14px;
+  }
+  .target-section .input-group input { font-size: 20px; padding: 14px; }
+
+  /* Larger Leaflet zoom controls */
+  .leaflet-bar a {
+    width: 38px !important;
+    height: 38px !important;
+    line-height: 38px !important;
+    font-size: 20px !important;
+  }
+}
+
+/* === Update banner === */
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #0077b6;
+  color: #fff;
+  z-index: 3000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.update-banner .update-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 16px;
+  max-width: 900px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+.update-banner .update-text { font-size: 13px; }
+.update-banner .update-actions { display: flex; gap: 6px; }
+.update-banner .btn-update-install {
+  background: #fff;
+  color: #0077b6;
+  padding: 6px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+}
+.update-banner .btn-update-dismiss {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* === Very small screens (< 400px) === */
+@media (max-width: 400px) {
+  .header-left h1 { font-size: 14px; }
+  .btn-layer { font-size: 9px; padding: 4px 5px; }
+}

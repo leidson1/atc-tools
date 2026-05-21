@@ -64,12 +64,12 @@
         <section class="panel-section target-section">
           <h2>Consultar AD - RDL / Distância</h2>
           <div class="input-group">
-            <input type="text" id="target-input" placeholder="AD ou FIXO (ex: SDNC, UXAM, PMS)" maxlength="5" autocomplete="off" />
+            <input type="text" id="target-input" placeholder="AD, FIXO ou COORDENADA" maxlength="40" autocomplete="off" />
             <button id="btn-calculate" class="btn-primary">BUSCAR</button>
           </div>
           <div id="target-search-results" class="search-results hidden"></div>
           <div class="hint">
-            <small>Aeródromo (SBPJ, SDNC), Fixo (UXAM, ABATE) ou VOR/NDB (PMS)</small>
+            <small>AD/Fixo (SDNC, UXAM) ou coordenada: 22°54'S 043°10'W · 2254S04310W · -22.9, -43.17</small>
           </div>
         </section>
 
@@ -176,7 +176,7 @@
         </div>
 
         <button id="btn-welcome-start" class="btn-primary btn-full welcome-btn" disabled>INICIAR</button>
-        <p class="welcome-version">v0.4.0</p>
+        <p class="welcome-version">v0.5.0</p>
       </div>
     </div>
 

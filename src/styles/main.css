@@ -30,6 +30,8 @@
   --header-bg: #0077b6;
   --header-text: #ffffff;
   --glow: 0 0 0 rgba(0,0,0,0);
+  --panel-float-bg: rgba(255, 255, 255, 0.93);
+  --shadow-float: 0 8px 32px rgba(15, 30, 60, 0.16);
 }
 
 [data-theme="dark"] {
@@ -58,6 +60,8 @@
   --header-bg: #0d1322;
   --header-text: #e6edf7;
   --glow: 0 0 14px rgba(34, 211, 238, 0.22);
+  --panel-float-bg: rgba(15, 21, 37, 0.90);
+  --shadow-float: 0 10px 40px rgba(0, 0, 0, 0.55);
 }
 
 /* === Reset === */
@@ -245,6 +249,7 @@ body {
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
 }
 
 /* === Buttons === */
@@ -422,7 +427,13 @@ input[type="password"]::placeholder {
     width: 88vw;
     max-width: 360px;
     min-width: 0;
+    max-height: none;
     padding-top: 40px;
+    border-radius: 0;
+    border: none;
+    background: var(--bg-panel);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     z-index: 900;
     transform: translateX(-100%);
     transition: transform 220ms ease-out;

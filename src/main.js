@@ -13,6 +13,7 @@ import { initSettings, getDefaultAerodrome } from './settings.js';
 import { showWelcomeIfNeeded } from './welcome.js';
 import { initDrawer, closeDrawerIfMobile } from './drawer.js';
 import { initVersionIndicator } from './version-indicator.js';
+import { initTrajectory } from './trajectory.js';
 
 // App state
 let baseAerodrome = null;
@@ -39,6 +40,9 @@ async function init() {
 
   // Initialize version indicator (offline build only)
   initVersionIndicator();
+
+  // Initialize trajectory / TMA crossing tool
+  initTrajectory();
 
   // Target input - Enter to calculate
   const targetInput = document.getElementById('target-input');

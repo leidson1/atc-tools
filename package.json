@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "sync-data": "node scripts/sync-all.mjs",
     "sync-aerodromes": "node scripts/sync-aerodromes.mjs",
-    "sync-waypoints": "node scripts/sync-waypoints.mjs"
+    "sync-waypoints": "node scripts/sync-waypoints.mjs",
+    "sync-airspace": "node scripts/sync-airspace.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4"

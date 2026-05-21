@@ -6,6 +6,7 @@ let aerodromeMarker = null;
 let pointMarker = null;
 let radialLine = null;
 let distanceCircles = [];
+let trajectoryLayers = [];
 let compassRoseSvg = null;
 let onMapClick = null;
 
@@ -168,4 +169,62 @@ export function clearRdlVisuals() {
 
 export function getMap() {
   return map;
+}
+
+// Custom trajectory endpoint icon (green)
+const trajIcon = L.divIcon({
+  className: '',
+  html: `<div style="width:13px;height:13px;background:#0a7d2c;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>`,
+  iconSize: [13, 13],
+  iconAnchor: [6.5, 6.5],
+});
+
+export function showTrajectory(a, b, traj, crossed) {
+  if (!map) return;
+  clearTrajectory();
+
+  const latlngs = traj.map((p) => [p.lat, p.lon]);
+
+  // Highlight crossed TMA polygons first (under the line)
+  if (crossed.length) {
+    const layer = L.geoJSON(
+      { type: 'FeatureCollection', features: crossed.map((c) => c.feature) },
+      {
+        style: {
+          color: '#9b5de5',
+          weight: 2,
+          opacity: 0.9,
+          fillColor: '#9b5de5',
+          fillOpacity: 0.18,
+          dashArray: '4 3',
+        },
+        onEachFeature: (f, l) =>
+          l.bindTooltip(
+            `<strong>${f.properties.id || ''}</strong>${f.properties.name ? '<br>' + f.properties.name : ''}`,
+            { sticky: true, className: 'airspace-tooltip' }
+          ),
+      }
+    ).addTo(map);
+    trajectoryLayers.push(layer);
+  }
+
+  const line = L.polyline(latlngs, {
+    color: '#0a7d2c',
+    weight: 3,
+    opacity: 0.9,
+  }).addTo(map);
+  trajectoryLayers.push(line);
+
+  const mk = (pt, label) =>
+    L.marker([pt.lat, pt.lon], { icon: trajIcon })
+      .addTo(map)
+      .bindTooltip(label, { direction: 'top', className: 'distance-label', offset: [0, -10] });
+  trajectoryLayers.push(mk(a, a.identifier || 'A'), mk(b, b.identifier || 'B'));
+
+  map.fitBounds(L.latLngBounds(latlngs), { padding: [60, 60], maxZoom: 10 });
+}
+
+export function clearTrajectory() {
+  trajectoryLayers.forEach((l) => map.removeLayer(l));
+  trajectoryLayers = [];
 }

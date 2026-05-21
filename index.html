@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistema de Radiais - ATC Tools</title>
+  <title>ATC Tools — Radiais & TMA</title>
 </head>
 <body>
   <div id="app">
@@ -15,20 +15,17 @@
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <h1>Sistema de Radiais</h1>
-        <span class="subtitle">ATC Tools</span>
-      </div>
-      <div class="header-center">
-        <span class="base-indicator">BASE:</span>
-        <span class="base-icao" id="header-base-icao">SBPJ</span>
+        <div class="brand">
+          <span class="brand-dot"></span>
+          <h1>ATC Tools</h1>
+        </div>
       </div>
       <div class="header-right">
-        <div class="layer-toggles">
-          <button id="btn-toggle-fir" class="btn-layer" title="Limites das FIRs">FIR</button>
-          <button id="btn-toggle-tma" class="btn-layer" title="TMAs - Áreas Terminais">TMA</button>
-          <button id="btn-toggle-ctr" class="btn-layer" title="CTRs - Zonas de Controle">CTR</button>
-        </div>
+        <span class="base-tag">BASE <strong id="header-base-icao">SBPJ</strong></span>
         <span id="connection-status" class="status-indicator">--</span>
+        <button id="btn-theme" class="btn-icon" title="Alternar tema" aria-label="Alternar tema">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>
+        </button>
         <button id="btn-settings" class="btn-icon" title="Configurações">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -46,81 +43,114 @@
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
-        <!-- Base Aerodrome (fixed, set in settings) -->
-        <section class="panel-section base-section">
-          <h2>Aeródromo Base</h2>
-          <div id="base-info" class="info-card">
-            <div class="info-name" id="base-name">Carregando...</div>
-            <div class="info-detail"><span>ICAO:</span> <span id="base-icao">--</span></div>
-            <div class="info-detail"><span>Cidade:</span> <span id="base-city">--</span></div>
-            <div class="info-detail"><span>ARP:</span> <span id="base-arp">--</span></div>
-            <div class="info-detail"><span>Elevação:</span> <span id="base-elev">--</span></div>
-            <div class="info-detail"><span>Var Mag:</span> <span id="base-var">--</span></div>
-            <div class="info-detail"><span>FIR:</span> <span id="base-fir">--</span></div>
-          </div>
-        </section>
 
-        <!-- Target Aerodrome Input -->
-        <section class="panel-section target-section">
-          <h2>Consultar AD - RDL / Distância</h2>
-          <div class="input-group">
-            <input type="text" id="target-input" placeholder="AD, FIXO ou COORDENADA" maxlength="40" autocomplete="off" />
-            <button id="btn-calculate" class="btn-primary">BUSCAR</button>
+        <!-- Tabs -->
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-view="radial">Radial</button>
+          <button class="tab" data-view="rota">Rota</button>
+          <button class="tab" data-view="camadas">Camadas</button>
+          <button class="tab" data-view="historico">Log</button>
+        </div>
+
+        <!-- VIEW: RADIAL -->
+        <div class="tab-view active" id="view-radial">
+          <div class="base-chip">
+            <div class="base-chip-head">
+              <span class="base-chip-icao" id="base-icao">--</span>
+              <span class="base-chip-name" id="base-name">Carregando...</span>
+            </div>
+            <div class="base-chip-grid">
+              <span><i>Cidade</i><span id="base-city">--</span></span>
+              <span><i>ARP</i><span id="base-arp">--</span></span>
+              <span><i>Elev</i><span id="base-elev">--</span></span>
+              <span><i>Var</i><span id="base-var">--</span></span>
+              <span class="base-chip-fir"><i>FIR</i><span id="base-fir">--</span></span>
+            </div>
+          </div>
+
+          <div class="field">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="target-input" placeholder="AD, fixo ou coordenada" maxlength="40" autocomplete="off" />
+            <button id="btn-calculate" class="field-btn">BUSCAR</button>
           </div>
           <div id="target-search-results" class="search-results hidden"></div>
-          <div class="hint">
-            <small>AD/Fixo (SDNC, UXAM) ou coordenada: 22°54'S 043°10'W · 2254S04310W · -22.9, -43.17</small>
-          </div>
-        </section>
+          <div class="hint">AD/Fixo (SDNC, UXAM) ou coord: 22°54'S 043°10'W · 2254S04310W · -22.9, -43.17</div>
 
-        <!-- Result Section -->
-        <section class="panel-section" id="result-section">
-          <h2>Resultado</h2>
-          <div id="rdl-result" class="rdl-display hidden">
-            <div class="rdl-header">
-              <span id="rdl-target-name" class="rdl-target-name">--</span>
+          <div id="rdl-result" class="result-card hidden">
+            <div class="result-head">
+              <span id="rdl-target-name" class="result-title">--</span>
+              <button id="btn-copy-rdl" class="chip-btn" title="Copiar">copiar</button>
             </div>
-            <div class="rdl-main">
-              <span class="rdl-label">RDL de <span id="rdl-base-icao">SBPJ</span></span>
-              <span class="rdl-value" id="rdl-value">---/--.-</span>
+            <div class="big-readout">
+              <small>RDL / DME de <span id="rdl-base-icao">SBPJ</span></small>
+              <span id="rdl-value">---/--.-</span>
             </div>
-            <div class="rdl-details">
-              <div class="rdl-detail"><span>Radial Mag:</span> <span id="rdl-mag">--</span></div>
-              <div class="rdl-detail"><span>Radial True:</span> <span id="rdl-true">--</span></div>
-              <div class="rdl-detail"><span>Distância:</span> <span id="rdl-dist">--</span></div>
-              <div class="rdl-detail"><span>Declinação:</span> <span id="rdl-decl">--</span></div>
-              <div class="rdl-detail"><span>FIR:</span> <span id="rdl-fir">--</span></div>
+            <div class="instruments">
+              <div class="inst"><div class="inst-lbl">Mag</div><div class="inst-val" id="rdl-mag">--</div></div>
+              <div class="inst"><div class="inst-lbl">True</div><div class="inst-val" id="rdl-true">--</div></div>
+              <div class="inst"><div class="inst-lbl">Dist</div><div class="inst-val" id="rdl-dist">--</div></div>
             </div>
-            <button id="btn-copy-rdl" class="btn-secondary btn-full">Copiar RDL</button>
+            <div class="result-foot">
+              <span>Decl <strong id="rdl-decl">--</strong></span>
+              <span>FIR <strong id="rdl-fir">--</strong></span>
+            </div>
           </div>
-        </section>
+        </div>
 
-        <!-- Trajectory / TMA Section -->
-        <section class="panel-section trajectory-section">
-          <div class="section-header">
-            <h2>Trajetória / Cruzamento de TMA</h2>
-            <button id="btn-trajectory-clear" class="btn-text" title="Limpar trajetória">Limpar</button>
+        <!-- VIEW: ROTA -->
+        <div class="tab-view" id="view-rota">
+          <div class="field">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z"/></svg>
+            <input type="text" id="traj-from" placeholder="Origem: AD, fixo ou coord" maxlength="40" autocomplete="off" />
           </div>
-          <div class="form-group">
-            <input type="text" id="traj-from" placeholder="Origem: AD, fixo ou coordenada" maxlength="40" autocomplete="off" />
+          <button id="btn-traj-swap" class="swap-btn" title="Inverter origem/destino">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l-3 3 3 3"/><path d="M4 13h16"/><path d="M17 14l3-3-3-3"/><path d="M20 11H4"/></svg>
+            inverter
+          </button>
+          <div class="field">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z"/></svg>
+            <input type="text" id="traj-to" placeholder="Destino: AD, fixo ou coord" maxlength="40" autocomplete="off" />
           </div>
-          <div class="form-group">
-            <input type="text" id="traj-to" placeholder="Destino: AD, fixo ou coordenada" maxlength="40" autocomplete="off" />
+          <div class="rota-actions">
+            <button id="btn-trajectory" class="btn-primary btn-full">TRAÇAR</button>
+            <button id="btn-trajectory-clear" class="chip-btn" title="Limpar trajetória">limpar</button>
           </div>
-          <button id="btn-trajectory" class="btn-primary btn-full">TRAÇAR</button>
-          <div id="traj-result" class="traj-result hidden"></div>
-        </section>
+          <div id="traj-result" class="hidden"></div>
+        </div>
 
-        <!-- History Section -->
-        <section class="panel-section">
-          <div class="section-header">
-            <h2>Histórico</h2>
-            <button id="btn-clear-history" class="btn-text" title="Limpar histórico">Limpar</button>
+        <!-- VIEW: CAMADAS -->
+        <div class="tab-view" id="view-camadas">
+          <div class="layer-row" data-layer="fir" id="btn-toggle-fir">
+            <div class="layer-info"><span class="layer-swatch" style="background:#0891b2"></span>
+              <div><div class="layer-name">FIR</div><div class="layer-meta">5 regiões · DECEA</div></div>
+            </div>
+            <span class="switch"></span>
+          </div>
+          <div class="layer-row" data-layer="tma" id="btn-toggle-tma">
+            <div class="layer-info"><span class="layer-swatch" style="background:#9b5de5"></span>
+              <div><div class="layer-name">TMA</div><div class="layer-meta">51 áreas · com teto/piso</div></div>
+            </div>
+            <span class="switch"></span>
+          </div>
+          <div class="layer-row" data-layer="ctr" id="btn-toggle-ctr">
+            <div class="layer-info"><span class="layer-swatch" style="background:#e63946"></span>
+              <div><div class="layer-name">CTR</div><div class="layer-meta">57 áreas</div></div>
+            </div>
+            <span class="switch"></span>
+          </div>
+          <div class="hint">Toque para ligar/desligar cada camada no mapa</div>
+        </div>
+
+        <!-- VIEW: HISTÓRICO -->
+        <div class="tab-view" id="view-historico">
+          <div class="view-head">
+            <span class="view-head-title">Histórico de consultas</span>
+            <button id="btn-clear-history" class="chip-btn">limpar</button>
           </div>
           <div id="history-list" class="history-list">
             <div class="history-empty">Nenhuma consulta realizada</div>
           </div>
-        </section>
+        </div>
       </aside>
 
       <!-- Map Area -->
@@ -167,19 +197,18 @@
       <div class="welcome-card">
         <div class="welcome-logo">
           <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-            <circle cx="32" cy="32" r="28" stroke="#0077b6" stroke-width="2" fill="rgba(0,119,182,0.1)"/>
-            <circle cx="32" cy="32" r="18" stroke="#0077b6" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
-            <circle cx="32" cy="32" r="8" stroke="#0077b6" stroke-width="1" fill="none" stroke-dasharray="3 3"/>
-            <line x1="32" y1="2" x2="32" y2="62" stroke="#0077b6" stroke-width="1" opacity="0.4"/>
-            <line x1="2" y1="32" x2="62" y2="32" stroke="#0077b6" stroke-width="1" opacity="0.4"/>
-            <circle cx="32" cy="32" r="3" fill="#0077b6"/>
+            <circle cx="32" cy="32" r="28" stroke="#22d3ee" stroke-width="2" fill="rgba(34,211,238,0.1)"/>
+            <circle cx="32" cy="32" r="18" stroke="#22d3ee" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+            <circle cx="32" cy="32" r="8" stroke="#22d3ee" stroke-width="1" fill="none" stroke-dasharray="3 3"/>
+            <line x1="32" y1="2" x2="32" y2="62" stroke="#22d3ee" stroke-width="1" opacity="0.4"/>
+            <line x1="2" y1="32" x2="62" y2="32" stroke="#22d3ee" stroke-width="1" opacity="0.4"/>
+            <circle cx="32" cy="32" r="3" fill="#22d3ee"/>
           </svg>
         </div>
-        <h1 class="welcome-title">Sistema de Radiais</h1>
-        <p class="welcome-subtitle">ATC Tools</p>
+        <h1 class="welcome-title">ATC Tools</h1>
+        <p class="welcome-subtitle">Radiais & Trajetórias</p>
         <p class="welcome-desc">
-          Ferramenta de cálculo de RDL (Radial e Distância) para Controle de Tráfego Aéreo.
-          Com 5.190 aeródromos e 6.756 waypoints do Brasil.
+          Cálculo de RDL/DME, plotagem de coordenadas e cruzamento de TMA para Controle de Tráfego Aéreo.
         </p>
 
         <div class="welcome-form">
@@ -192,7 +221,7 @@
         </div>
 
         <button id="btn-welcome-start" class="btn-primary btn-full welcome-btn" disabled>INICIAR</button>
-        <p class="welcome-version">v0.7.0</p>
+        <p class="welcome-version">v0.8.0</p>
       </div>
     </div>
 

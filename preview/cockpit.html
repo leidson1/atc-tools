@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ATC Tools — Protótipo Cockpit</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #131a2c;
+    --surface-2: #1b2540;
+    --border: #2a3654;
+    --text: #e6edf7;
+    --dim: #8b9bb8;
+    --accent: #22d3ee;
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --glow: 0 0 16px rgba(34, 211, 238, 0.25);
+    --mono: 'Consolas', 'SF Mono', 'Roboto Mono', monospace;
+    --sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  [data-theme="light"] {
+    --bg: #e9eef5;
+    --surface: #ffffff;
+    --surface-2: #f1f5fb;
+    --border: #d3dcea;
+    --text: #0f1729;
+    --dim: #5b6b86;
+    --accent: #0891b2;
+    --ok: #059669;
+    --warn: #b45309;
+    --danger: #dc2626;
+    --glow: 0 0 0 rgba(0,0,0,0);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--sans);
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,0.06), transparent),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 18px;
+    transition: background .3s, color .3s;
+  }
+  .panel {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Header */
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 9px; }
+  .brand .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--ok); box-shadow: 0 0 10px var(--ok);
+    animation: pulse 2.4s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .brand h1 { font-size: 15px; letter-spacing: .4px; font-weight: 700; }
+  .brand span { font-size: 10px; color: var(--dim); letter-spacing: 2px; text-transform: uppercase; }
+  .theme-btn {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    width: 38px; height: 38px; border-radius: 10px; cursor: pointer;
+    display: grid; place-items: center; transition: .2s;
+  }
+  .theme-btn:hover { border-color: var(--accent); }
+
+  /* Tabs (segmented) */
+  .tabs {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 4px;
+  }
+  .tab {
+    border: none; background: transparent; color: var(--dim);
+    padding: 9px 6px; border-radius: 8px; cursor: pointer;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+    transition: .2s; font-family: var(--sans);
+  }
+  .tab.active { background: var(--surface-2); color: var(--accent); box-shadow: var(--glow); }
+
+  .view { display: none; flex-direction: column; gap: 12px; animation: fade .25s ease; }
+  .view.active { display: flex; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* Inputs */
+  .field {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 0 12px; transition: .2s;
+  }
+  .field:focus-within { border-color: var(--accent); box-shadow: var(--glow); }
+  .field svg { color: var(--dim); flex-shrink: 0; }
+  .field input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: var(--mono); font-size: 16px;
+    padding: 14px 0; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .field input::placeholder { color: var(--dim); letter-spacing: .5px; text-transform: none; }
+  .swap {
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--accent);
+    width: 100%; padding: 9px; border-radius: 10px; cursor: pointer; font-size: 12px;
+    display: flex; align-items: center; justify-content: center; gap: 6px; transition: .2s;
+  }
+  .swap:hover { border-color: var(--accent); }
+  .btn {
+    background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 75%, #000));
+    color: #04141c; border: none; padding: 14px; border-radius: 12px;
+    font-weight: 800; font-size: 14px; letter-spacing: 1px; cursor: pointer;
+    text-transform: uppercase; transition: .15s; box-shadow: var(--glow);
+  }
+  .btn:active { transform: translateY(1px); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* Instruments */
+  .instruments { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .inst {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 8px; text-align: center;
+  }
+  .inst .lbl { font-size: 9px; color: var(--dim); letter-spacing: 1.5px; text-transform: uppercase; }
+  .inst .val { font-family: var(--mono); font-size: 22px; font-weight: 800; margin-top: 4px; color: var(--accent); text-shadow: var(--glow); }
+
+  /* Result card */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .card-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--dim); }
+  .tag { font-size: 9px; padding: 3px 8px; border-radius: 20px; background: var(--surface-2); border: 1px solid var(--border); letter-spacing: 1px; }
+  .big {
+    font-family: var(--mono); font-size: 40px; font-weight: 800; letter-spacing: 2px;
+    color: var(--ok); text-align: center; text-shadow: 0 0 18px color-mix(in srgb, var(--ok) 40%, transparent);
+  }
+  .big small { display: block; font-size: 10px; letter-spacing: 2px; color: var(--dim); font-family: var(--sans); text-transform: uppercase; margin-bottom: 2px; text-shadow: none; }
+
+  /* TMA list */
+  .tma-head { display: flex; align-items: center; justify-content: space-between; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--warn); font-weight: 700; }
+  .level-field { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 4px 4px 4px 10px; }
+  .level-field span { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+  .level-field input { width: 56px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 5px; font-family: var(--mono); text-align: center; font-size: 13px; }
+  .tma {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 9px 11px; border-radius: 10px; margin-top: 7px;
+    border-left: 3px solid var(--warn); background: color-mix(in srgb, var(--warn) 9%, transparent);
+  }
+  .tma.out { border-left-color: var(--border); background: var(--surface-2); opacity: .55; }
+  .tma .nm { font-weight: 700; font-size: 13px; }
+  .tma .alt { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+  .tma .st { font-size: 9px; font-weight: 800; letter-spacing: 1px; padding: 2px 7px; border-radius: 20px; }
+  .tma .st.in { background: var(--warn); color: #1a1200; }
+  .tma .st.out { background: var(--border); color: var(--dim); }
+
+  /* Layers */
+  .layer { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 13px 14px; }
+  .layer .info { display: flex; align-items: center; gap: 11px; }
+  .layer .swatch { width: 14px; height: 14px; border-radius: 4px; }
+  .layer .meta { font-size: 11px; color: var(--dim); }
+  .layer .nm { font-weight: 700; font-size: 13px; color: var(--text); }
+  .toggle { width: 44px; height: 24px; border-radius: 20px; background: var(--surface-2); border: 1px solid var(--border); position: relative; cursor: pointer; transition: .2s; flex-shrink: 0; }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--dim); transition: .2s; }
+  .toggle.on { background: color-mix(in srgb, var(--accent) 30%, transparent); border-color: var(--accent); }
+  .toggle.on::after { left: 22px; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+  .hint { text-align: center; font-size: 10px; color: var(--dim); margin-top: 2px; }
+  .foot { text-align: center; font-size: 10px; color: var(--dim); margin-top: 6px; opacity: .7; }
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="top">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <h1>ATC Tools</h1>
+        <span>Base SBBR</span>
+      </div>
+    </div>
+    <button class="theme-btn" id="theme" title="Alternar tema">
+      <svg id="ic-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>
+    </button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-v="radial">Radial</button>
+    <button class="tab" data-v="rota">Rota</button>
+    <button class="tab" data-v="camadas">Camadas</button>
+  </div>
+
+  <!-- RADIAL -->
+  <div class="view active" id="v-radial">
+    <div class="field">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input value="SDNT" id="rad-in" />
+    </div>
+    <div class="hint">AD · fixo · coordenada (22°54'S 043°10'W · 2254S04310W · -22.9,-43.1)</div>
+    <div class="card">
+      <div class="card-head"><span>SDNT · Fazenda Terra Prometida</span><span class="tag">AD</span></div>
+      <div class="big"><small>RDL / DME de SBBR</small>019 / 12.5</div>
+      <div class="instruments">
+        <div class="inst"><div class="lbl">Mag</div><div class="val">019°</div></div>
+        <div class="inst"><div class="lbl">True</div><div class="val">021°</div></div>
+        <div class="inst"><div class="lbl">FIR</div><div class="val" style="font-size:15px">SBBS</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROTA -->
+  <div class="view" id="v-rota">
+    <div class="field">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z"/></svg>
+      <input value="SBBR" id="r-from" />
+    </div>
+    <button class="swap" id="swap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l-3 3 3 3"/><path d="M4 13h16"/><path d="M17 14l3-3-3-3"/><path d="M20 11H4"/></svg>
+      inverter
+    </button>
+    <div class="field">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z"/></svg>
+      <input value="SDNT" id="r-to" />
+    </div>
+    <button class="btn" id="trace">Traçar trajetória</button>
+
+    <div class="instruments">
+      <div class="inst"><div class="lbl">Distância</div><div class="val">328<span style="font-size:12px"> NM</span></div></div>
+      <div class="inst"><div class="lbl">Rumo Mag</div><div class="val">019°</div></div>
+      <div class="inst"><div class="lbl">Rumo True</div><div class="val">357°</div></div>
+    </div>
+
+    <div class="card">
+      <div class="tma-head">
+        <span>⚠ TMA na rota (2)</span>
+        <div class="level-field">
+          <span>Nível FL</span>
+          <input id="lvl" value="100" inputmode="numeric" />
+        </div>
+      </div>
+      <div id="tma-list"></div>
+      <div class="hint" id="lvl-hint"></div>
+    </div>
+  </div>
+
+  <!-- CAMADAS -->
+  <div class="view" id="v-camadas">
+    <div class="layer">
+      <div class="info"><div class="swatch" style="background:#0891b2"></div><div><div class="nm">FIR</div><div class="meta">5 regiões · DECEA</div></div></div>
+      <div class="toggle on" data-layer></div>
+    </div>
+    <div class="layer">
+      <div class="info"><div class="swatch" style="background:#9b5de5"></div><div><div class="nm">TMA</div><div class="meta">51 áreas · OpenAIP · c/ teto/piso</div></div></div>
+      <div class="toggle on" data-layer></div>
+    </div>
+    <div class="layer">
+      <div class="info"><div class="swatch" style="background:#e63946"></div><div><div class="nm">CTR</div><div class="meta">57 áreas · OpenAIP</div></div></div>
+      <div class="toggle" data-layer></div>
+    </div>
+    <div class="hint">Toque para ligar/desligar cada camada no mapa</div>
+  </div>
+
+  <div class="foot">protótipo · dados de exemplo · não conectado ao app</div>
+</div>
+
+<script>
+  // Tabs
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('v-' + t.dataset.v).classList.add('active');
+  });
+
+  // Theme toggle
+  const sun = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  const moon = document.getElementById('ic-moon').outerHTML;
+  document.getElementById('theme').onclick = function () {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+    this.innerHTML = dark ? sun : moon;
+  };
+
+  // Swap origin/destination
+  document.getElementById('swap').onclick = () => {
+    const a = document.getElementById('r-from'), b = document.getElementById('r-to');
+    [a.value, b.value] = [b.value, a.value];
+  };
+
+  // TMA list with level-based "inside/outside" using ceiling/floor
+  const tmas = [
+    { name: 'Brasília', floor: 3500, ceil: 14500, floorTxt: '3500 ft', ceilTxt: 'FL145' },
+    { name: 'Palmas',   floor: 3500, ceil: 14500, floorTxt: '3500 ft', ceilTxt: 'FL145' },
+  ];
+  function renderTmas() {
+    const fl = parseInt(document.getElementById('lvl').value || '0', 10);
+    const alt = fl * 100; // FL -> ft
+    let inside = 0;
+    document.getElementById('tma-list').innerHTML = tmas.map(t => {
+      const isIn = alt >= t.floor && alt <= t.ceil;
+      if (isIn) inside++;
+      return `<div class="tma ${isIn ? '' : 'out'}">
+        <div><div class="nm">${t.name}</div><div class="alt">${t.floorTxt} – ${t.ceilTxt}</div></div>
+        <div class="st ${isIn ? 'in' : 'out'}">${isIn ? 'DENTRO' : 'fora'}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('lvl-hint').textContent =
+      inside ? `No FL${fl}, a aeronave está DENTRO de ${inside} TMA(s).`
+             : `No FL${fl}, a aeronave passa fora do teto/piso de todas.`;
+  }
+  document.getElementById('lvl').oninput = renderTmas;
+  renderTmas();
+
+  // Layer toggles
+  document.querySelectorAll('[data-layer]').forEach(t => t.onclick = () => t.classList.toggle('on'));
+
+  // Trace feedback
+  document.getElementById('trace').onclick = function () {
+    this.textContent = 'Traçado ✓';
+    setTimeout(() => this.textContent = 'Traçar trajetória', 1200);
+  };
+</script>
+</body>
+</html>

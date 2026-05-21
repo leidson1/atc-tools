@@ -35,9 +35,12 @@ export function initMap(containerId, onClick) {
   map = L.map(containerId, {
     center: [-10.2914, -48.3569], // SBPJ default
     zoom: 8,
-    zoomControl: true,
+    zoomControl: false,
     attributionControl: true,
   });
+
+  // Zoom control on the right so the floating panel (top-left) doesn't cover it
+  L.control.zoom({ position: 'topright' }).addTo(map);
 
   L.tileLayer(LIGHT_TILES, {
     attribution: LIGHT_ATTR,

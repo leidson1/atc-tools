@@ -143,7 +143,7 @@ function setBaseAerodrome(info) {
   const decl = varMag || -21;
   drawCompassRose(map, info.arp_lat, info.arp_lon, decl);
 
-  updateStatus(`Base: ${info.icao_code} | ${baseFir}`);
+  updateStatus(`FIR ${baseFir}`);
 }
 
 async function onCalculateClick() {
@@ -284,7 +284,7 @@ function applyTheme(theme) {
 }
 
 function initTheme() {
-  applyTheme(localStorage.getItem('atc-theme') || 'dark');
+  applyTheme(localStorage.getItem('atc-theme') || 'light');
   document.getElementById('btn-theme')?.addEventListener('click', () => {
     const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     localStorage.setItem('atc-theme', next);

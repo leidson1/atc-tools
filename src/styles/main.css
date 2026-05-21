@@ -404,10 +404,14 @@ input[type="password"]::placeholder {
   }
 
   .header-left { gap: 6px; }
-  .brand h1 { font-size: 15px; }
+  .brand h1 { font-size: 14px; }
   .header-right { gap: 4px; }
-  .base-tag { font-size: 10px; }
+  .base-tag { font-size: 9px; letter-spacing: .3px; }
   .status-indicator { display: none; }
+
+  .tabs { margin: 10px 12px 0; gap: 3px; }
+  .tab { font-size: 10px; padding: 9px 2px; letter-spacing: .2px; }
+  .tab-view { padding: 12px; gap: 11px; }
 
   .btn-hamburger {
     display: flex;

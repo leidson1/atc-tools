@@ -1,21 +1,26 @@
-/* === Floating Panel (desktop) === */
+/* === Panel === */
 #panel {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  width: 358px;
-  max-height: calc(100% - 28px);
-  background: var(--panel-float-bg);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow-float);
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  padding-bottom: 10px;
-  z-index: 1000;
+  overflow-y: auto;
+}
+/* Floating card on desktop only (mobile uses the drawer in main.css) */
+@media (min-width: 769px) {
+  #panel {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    width: 358px;
+    max-height: calc(100% - 28px);
+    background: var(--panel-float-bg);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-float);
+    padding-bottom: 10px;
+    z-index: 1000;
+  }
 }
 #map-container { flex: 1; }
 

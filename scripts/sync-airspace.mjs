@@ -1,110 +1,104 @@
 #!/usr/bin/env node
-// Sincroniza os limites de espaço aéreo (FIR / TMA / CTR) do GeoServer
-// do DECEA — a MESMA fonte de onde os boundaries originais foram tirados
-// (commit v0.2.0). Regrava src/{fir,tma,ctr}-boundaries.json.
+// Sincroniza limites de TMA e CTR a partir do export de airspace do Brasil
+// do OpenAIP. Regrava src/{tma,ctr}-boundaries.json.
 //
-// IMPORTANTE: o GeoServer do DECEA NÃO é acessível do ambiente de nuvem
-// (a política de rede só libera o GitHub). Rode este script na SUA
-// máquina, que tem acesso a geoaisweb.decea.mil.br.
+// Fonte: bucket público de exports do OpenAIP no Google Cloud Storage.
+// (O site openaip.net costuma ser bloqueado por allowlist, mas o bucket
+//  storage.googleapis.com normalmente é acessível.)
+//
+// ATENÇÃO: OpenAIP é uma base COMUNITÁRIA (não-oficial). Use ciente disso.
+// FIR não vem deste export (mantém-se a base existente).
 //
 // Uso:
-//   node scripts/sync-airspace.mjs
-//
-// Antes, confirme os nomes das layers abrindo no navegador:
-//   https://geoaisweb.decea.mil.br/geoserver/ICA/ows?service=WFS&version=2.0.0&request=GetCapabilities
-// e ajuste LAYER_CANDIDATES / FIELD_HINTS abaixo se necessário.
+//   node scripts/sync-airspace.mjs           # país padrão: br
+//   AIRSPACE_COUNTRY=ar node scripts/sync-airspace.mjs
 
 import { writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const WFS = 'https://geoaisweb.decea.mil.br/geoserver/ICA/ows';
+const COUNTRY = (process.env.AIRSPACE_COUNTRY || 'br').toLowerCase();
+const BUCKET = 'https://storage.googleapis.com/29f98e10-a489-4c82-ae5e-489dbcd4912f';
+const URL = `${BUCKET}/${COUNTRY}_asp.geojson`;
 
-// Nomes de layer tentados em ordem (o DECEA já renomeou essas no passado).
-const LAYER_CANDIDATES = {
-  fir: ['ICA:fir', 'ICA:firs', 'ICA:fir_p'],
-  tma: ['ICA:tma', 'ICA:tmas', 'ICA:tma_p'],
-  ctr: ['ICA:ctr', 'ICA:ctrs', 'ICA:ctr_p'],
+const PREPS = new Set(['de', 'da', 'do', 'dos', 'das', 'e', 'del', 'la']);
+
+// OpenAIP fornece nomes sem acento — re-acentua localidades brasileiras.
+const ACCENTS = {
+  Amazonica: 'Amazônica', Anapolis: 'Anápolis', Belem: 'Belém', Brasilia: 'Brasília',
+  Corumba: 'Corumbá', Cuiaba: 'Cuiabá', Florianopolis: 'Florianópolis', Galeao: 'Galeão',
+  Guara: 'Guará', Ilheus: 'Ilhéus', Jose: 'José', Luis: 'Luís', Macae: 'Macaé',
+  Macapa: 'Macapá', Maceio: 'Maceió', Maraba: 'Marabá', Maringa: 'Maringá',
+  Ribeirao: 'Ribeirão', Santarem: 'Santarém', Sao: 'São', Taubate: 'Taubaté',
+  Uberlandia: 'Uberlândia', Vitoria: 'Vitória',
 };
 
-// Campos prováveis para id e nome (case-insensitive). O script também
-// imprime TODAS as propriedades da 1ª feature pra você conferir/ajustar.
-const FIELD_HINTS = {
-  id: ['localidade_id', 'id', 'codigo', 'cd_loc', 'sigla', 'ident'],
-  name: ['nome', 'name', 'localidade', 'denominacao', 'txt_name'],
-};
-
-async function fetchLayer(typeName) {
-  const params = new URLSearchParams({
-    service: 'WFS',
-    version: '2.0.0',
-    request: 'GetFeature',
-    typeNames: typeName,
-    outputFormat: 'application/json',
-    srsName: 'EPSG:4326',
-  });
-  const res = await fetch(`${WFS}?${params}`);
-  if (!res.ok) return null;
-  try {
-    const data = await res.json();
-    return data?.features?.length ? data : null;
-  } catch {
-    return null;
-  }
+function titleCase(s) {
+  return s
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w, i) => {
+      if (i > 0 && PREPS.has(w)) return w;
+      const c = w.charAt(0).toUpperCase() + w.slice(1);
+      return ACCENTS[c] || c;
+    })
+    .join(' ');
 }
 
-function pick(props, hints) {
-  const keys = Object.keys(props);
-  for (const hint of hints) {
-    const k = keys.find((x) => x.toLowerCase() === hint.toLowerCase());
-    if (k && props[k] != null && String(props[k]).trim()) return String(props[k]).trim();
-  }
-  return '';
+function cleanName(raw) {
+  return titleCase(
+    raw
+      .replace(/^(TMA|CTR|ATZ|FIR|CTA|UTA)[-\s]+/i, '')
+      .replace(/_/g, ' ')
+      .replace(/([A-Za-z])(\d)/g, '$1 $2')
+      .trim()
+  );
 }
 
-function isPolygon(geom) {
-  return geom && (geom.type === 'Polygon' || geom.type === 'MultiPolygon');
+// OpenAIP altitude units: 1=ft, 6=FL (flight level), 0=m
+function fmtLimit(l) {
+  if (!l || l.value == null) return '';
+  if (l.unit === 6) return `FL${l.value}`;
+  if (l.unit === 1) return l.value === 0 ? 'SFC' : `${l.value} ft`;
+  if (l.unit === 0) return l.value === 0 ? 'SFC' : `${l.value} m`;
+  return String(l.value);
 }
 
-async function syncType(type) {
-  let raw = null;
-  for (const layer of LAYER_CANDIDATES[type]) {
-    process.stdout.write(`  ${type}: tentando ${layer} ... `);
-    raw = await fetchLayer(layer);
-    console.log(raw ? `${raw.features.length} features` : 'vazio');
-    if (raw) break;
-  }
-  if (!raw) {
-    console.warn(`  ! ${type}: nenhuma layer retornou dados — ajuste LAYER_CANDIDATES.`);
-    return;
-  }
-
-  console.log(`  ${type}: propriedades disponíveis ->`, Object.keys(raw.features[0].properties || {}).join(', '));
-
-  const features = raw.features
-    .filter((f) => isPolygon(f.geometry))
-    .map((f) => ({
-      type: 'Feature',
-      properties: {
-        id: pick(f.properties, FIELD_HINTS.id),
-        name: pick(f.properties, FIELD_HINTS.name),
-      },
-      geometry: f.geometry,
-    }));
-
-  const out = { type: 'FeatureCollection', features };
-  const path = resolve(ROOT, `src/${type}-boundaries.json`);
-  writeFileSync(path, JSON.stringify(out));
-  console.log(`  ${type}: gravado ${features.length} polígonos em ${path}\n`);
+function isPolygon(g) {
+  return g && (g.type === 'Polygon' || g.type === 'MultiPolygon');
 }
 
 async function main() {
-  console.log('Sincronizando espaço aéreo do GeoServer DECEA...\n');
-  for (const type of ['fir', 'tma', 'ctr']) {
-    await syncType(type);
+  console.log(`Baixando airspace do OpenAIP: ${URL}`);
+  const res = await fetch(URL);
+  if (!res.ok) throw new Error(`HTTP ${res.status} ao baixar ${URL}`);
+  const data = await res.json();
+  console.log(`  ${data.features.length} áreas recebidas.\n`);
+
+  const TYPES = { tma: /^TMA[-\s]/i, ctr: /^CTR[-\s]/i };
+
+  for (const [type, re] of Object.entries(TYPES)) {
+    const features = data.features
+      .filter((f) => re.test(f.properties?.name || '') && isPolygon(f.geometry))
+      .map((f) => ({
+        type: 'Feature',
+        properties: {
+          id: f.properties.name,
+          name: cleanName(f.properties.name),
+          upper: fmtLimit(f.properties.upperLimit),
+          lower: fmtLimit(f.properties.lowerLimit),
+        },
+        geometry: f.geometry,
+      }))
+      .sort((a, b) => a.properties.name.localeCompare(b.properties.name));
+
+    const path = resolve(ROOT, `src/${type}-boundaries.json`);
+    writeFileSync(path, JSON.stringify({ type: 'FeatureCollection', features }));
+    console.log(`  ${type}: ${features.length} polígonos -> ${path}`);
   }
-  console.log('Concluído. Confira `git diff src/*-boundaries.json` (inclusive se a TMA Palmas apareceu).');
+
+  console.log('\nConcluído. FIR não foi alterado (não vem deste export).');
 }
 
 main().catch((e) => {

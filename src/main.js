@@ -44,6 +44,10 @@ async function init() {
   // Initialize trajectory / TMA crossing tool
   initTrajectory();
 
+  // Initialize tabs and theme toggle
+  initTabs();
+  initTheme();
+
   // Target input - Enter to calculate
   const targetInput = document.getElementById('target-input');
   targetInput.addEventListener('keydown', (e) => {
@@ -64,10 +68,10 @@ async function init() {
   // Clear history button
   document.getElementById('btn-clear-history').addEventListener('click', clearHistory);
 
-  // Layer toggle buttons
-  setupLayerToggle('btn-toggle-fir', 'fir', 'FIR');
-  setupLayerToggle('btn-toggle-tma', 'tma', 'TMA');
-  setupLayerToggle('btn-toggle-ctr', 'ctr', 'CTR');
+  // Layer toggle switches (Camadas tab)
+  setupLayerToggle('btn-toggle-fir', 'fir');
+  setupLayerToggle('btn-toggle-tma', 'tma');
+  setupLayerToggle('btn-toggle-ctr', 'ctr');
 
   // History click handler
   window.__onHistoryClick = (result) => {
@@ -182,6 +186,7 @@ async function onCalculateClick() {
     result.target_fir_label = firInfo.label;
 
     // Display result
+    activateTab('radial');
     displayResult(result);
     showRdlOnMap(result);
 
@@ -231,6 +236,7 @@ async function onMapClick(lat, lon) {
     const firInfo = getFirInfo(targetFir);
     result.target_fir = targetFir;
 
+    activateTab('radial');
     displayResult(result);
     showRdlOnMap(result);
 
@@ -259,13 +265,41 @@ async function onSettingsSave(config) {
   }
 }
 
-function setupLayerToggle(btnId, layerType, label) {
-  const btn = document.getElementById(btnId);
-  if (!btn) return;
-  btn.addEventListener('click', () => {
+function setupLayerToggle(rowId, layerType) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  row.addEventListener('click', () => {
     const visible = toggleLayer(layerType);
-    btn.textContent = visible ? `${label}` : `${label}`;
-    btn.classList.toggle('active', visible);
+    row.classList.toggle('active', visible);
+  });
+}
+
+const SVG_MOON = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>';
+const SVG_SUN = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('btn-theme');
+  if (btn) btn.innerHTML = theme === 'dark' ? SVG_MOON : SVG_SUN;
+}
+
+function initTheme() {
+  applyTheme(localStorage.getItem('atc-theme') || 'dark');
+  document.getElementById('btn-theme')?.addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('atc-theme', next);
+    applyTheme(next);
+  });
+}
+
+export function activateTab(name) {
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.view === name));
+  document.querySelectorAll('.tab-view').forEach((v) => v.classList.toggle('active', v.id === 'view-' + name));
+}
+
+function initTabs() {
+  document.querySelectorAll('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => activateTab(tab.dataset.view));
   });
 }
 

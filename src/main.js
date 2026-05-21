@@ -193,7 +193,15 @@ async function onCalculateClick() {
       firEl.style.color = firInfo.color;
     }
 
-    showToast(`${targetIcao}: RDL ${result.formatted} | FIR ${targetFir}`, 'success');
+    if (point.point_type === 'COORD') {
+      const note = point.coord.assumed ? ' — assumi S/W, confira!' : '';
+      showToast(
+        `Coordenada ${point.name}${note} → RDL ${result.formatted} de ${baseAerodrome.icao_code}`,
+        point.coord.assumed ? 'warning' : 'success'
+      );
+    } else {
+      showToast(`${targetIcao}: RDL ${result.formatted} | FIR ${targetFir}`, 'success');
+    }
     closeDrawerIfMobile();
   } catch (err) {
     showToast(`Erro ao buscar ${targetIcao}: ${err}`, 'error');

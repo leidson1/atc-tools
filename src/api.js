@@ -9,6 +9,7 @@ import { trueBearing, normalizeBearing } from './lib/bearing.js';
 import { distanceNm } from './lib/haversine.js';
 import { magneticDeclination } from './lib/magnetic.js';
 import { getConfig, saveConfig } from './lib/storage.js';
+import { parseCoordinate } from './lib/coord-parser.js';
 
 function aerodromeToNavPoint(info) {
   return {
@@ -94,7 +95,20 @@ export async function lookupPoint(identifier) {
   const wpt = getWaypoint(id);
   if (wpt) return wpt;
 
-  throw new Error(`'${id}' não encontrado como aeródromo nem como waypoint.`);
+  const coord = parseCoordinate(identifier);
+  if (coord) {
+    return {
+      identifier: coord.packed,
+      point_type: 'COORD',
+      name: coord.prettyDdm,
+      lat: coord.lat,
+      lon: coord.lon,
+      info: coord.assumed ? 'hemisfério S/W assumido' : coord.prettyDd,
+      coord,
+    };
+  }
+
+  throw new Error(`'${id}' não encontrado como aeródromo, waypoint nem coordenada.`);
 }
 
 export async function getCacheStats() {

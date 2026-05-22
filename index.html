@@ -116,6 +116,24 @@
             <button id="btn-trajectory" class="btn-primary btn-full">TRAÇAR</button>
             <button id="btn-trajectory-clear" class="chip-btn" title="Limpar trajetória">limpar</button>
           </div>
+
+          <div class="flight-params">
+            <div class="fp-grid">
+              <label class="fp-field">
+                <span>Perfil</span>
+                <select id="fp-profile">
+                  <option value="jato">Jato</option>
+                  <option value="turbo">Turboélice</option>
+                  <option value="leve">Leve / Pistão</option>
+                </select>
+              </label>
+              <label class="fp-field"><span>TAS (kt)</span><input id="fp-tas" inputmode="numeric" value="460" autocomplete="off" /></label>
+              <label class="fp-field"><span>Nível (FL)</span><input id="fp-fl" inputmode="numeric" value="350" autocomplete="off" /></label>
+              <label class="fp-field"><span>Decolagem (Z)</span><input id="fp-dep" placeholder="--:--" autocomplete="off" /></label>
+              <label class="fp-field fp-wide"><span>Vento (opcional)</span><input id="fp-wind" placeholder="ex: 270/40" autocomplete="off" /></label>
+            </div>
+          </div>
+
           <div id="traj-result" class="hidden"></div>
         </div>
 
@@ -222,7 +240,7 @@
         </div>
 
         <button id="btn-welcome-start" class="btn-primary btn-full welcome-btn" disabled>INICIAR</button>
-        <p class="welcome-version">v0.8.2</p>
+        <p class="welcome-version">v0.9.0</p>
       </div>
     </div>
 

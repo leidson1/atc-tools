@@ -14,6 +14,7 @@ import { showWelcomeIfNeeded } from './welcome.js';
 import { initDrawer, closeDrawerIfMobile } from './drawer.js';
 import { initVersionIndicator } from './version-indicator.js';
 import { initTrajectory } from './trajectory.js';
+import { initAerodromeLayer, toggleAerodromeLayer, aerodromeCount } from './aerodrome-layer.js';
 
 // App state
 let baseAerodrome = null;
@@ -28,6 +29,7 @@ async function init() {
 
   // Initialize airspace layers
   initAirspaceLayers(map);
+  initAerodromeLayer(map);
 
   // Initialize settings
   initSettings(onSettingsSave);
@@ -72,6 +74,14 @@ async function init() {
   setupLayerToggle('btn-toggle-fir', 'fir');
   setupLayerToggle('btn-toggle-tma', 'tma');
   setupLayerToggle('btn-toggle-ctr', 'ctr');
+
+  // Aerodrome layer (canvas)
+  const adCount = document.getElementById('ad-count');
+  if (adCount) adCount.textContent = `${aerodromeCount().toLocaleString('pt-BR')} cadastrados`;
+  const adRow = document.getElementById('btn-toggle-ad');
+  adRow?.addEventListener('click', () => {
+    adRow.classList.toggle('active', toggleAerodromeLayer());
+  });
 
   // History click handler
   window.__onHistoryClick = (result) => {

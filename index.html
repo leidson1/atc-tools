@@ -62,15 +62,17 @@
           <div class="base-chip">
             <div class="base-chip-head">
               <span class="base-chip-icao" id="base-icao">--</span>
-              <span class="base-chip-name" id="base-name">Carregando...</span>
+              <div class="base-chip-titles">
+                <span class="base-chip-name" id="base-name">Carregando...</span>
+                <span class="base-chip-sub" id="base-city">--</span>
+              </div>
             </div>
-            <div class="base-chip-grid">
-              <span><i>Cidade</i><span id="base-city">--</span></span>
-              <span><i>ARP</i><span id="base-arp">--</span></span>
-              <span><i>Elev</i><span id="base-elev">--</span></span>
-              <span><i>Var</i><span id="base-var">--</span></span>
-              <span class="base-chip-fir"><i>FIR</i><span id="base-fir">--</span></span>
+            <div class="base-chip-stats">
+              <div class="stat stat-fir stat-wide"><i>FIR</i><b id="base-fir">--</b></div>
+              <div class="stat"><i>Var mag</i><b id="base-var">--</b></div>
+              <div class="stat"><i>Elevação</i><b id="base-elev">--</b></div>
             </div>
+            <div class="base-chip-arp"><i>Coordenadas ARP</i><span id="base-arp">--</span></div>
           </div>
 
           <div class="field">

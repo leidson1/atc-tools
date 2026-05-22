@@ -54,11 +54,12 @@ function createCompassRoseSvg(declination) {
   outerCircle.setAttribute('opacity', '0.5');
   g.appendChild(outerCircle);
 
-  // Draw tick marks and labels
-  for (let i = 0; i < 360; i += 10) {
+  // Draw tick marks (every 5°) and radial labels (every 10°)
+  for (let i = 0; i < 360; i += 5) {
     const isCardinal = i % 90 === 0;
     const isMajor = i % 30 === 0;
-    const tickLen = isCardinal ? 15 : isMajor ? 10 : 5;
+    const isTen = i % 10 === 0;
+    const tickLen = isCardinal ? 15 : isMajor ? 11 : isTen ? 7 : 4;
     const r1 = 100 - tickLen;
     const r2 = 100;
 
@@ -74,12 +75,12 @@ function createCompassRoseSvg(declination) {
     line.setAttribute('x2', x2.toFixed(2));
     line.setAttribute('y2', y2.toFixed(2));
     line.setAttribute('stroke', isCardinal ? '#1a1a2e' : '#0077b6');
-    line.setAttribute('stroke-width', isCardinal ? '1.5' : '0.5');
-    line.setAttribute('opacity', isCardinal ? '0.8' : '0.4');
+    line.setAttribute('stroke-width', isCardinal ? '1.5' : isMajor ? '0.8' : '0.5');
+    line.setAttribute('opacity', isCardinal ? '0.85' : isMajor ? '0.6' : isTen ? '0.45' : '0.3');
     g.appendChild(line);
 
-    // Labels every 30 degrees
-    if (isMajor) {
+    // Radial labels every 10° (cardinals as letters, others as 01..35)
+    if (isTen) {
       const labelR = 110;
       const lx = labelR * Math.cos(rad);
       const ly = labelR * Math.sin(rad);
@@ -92,10 +93,11 @@ function createCompassRoseSvg(declination) {
       text.setAttribute('y', ly.toFixed(2));
       text.setAttribute('text-anchor', 'middle');
       text.setAttribute('dominant-baseline', 'central');
-      text.setAttribute('font-size', isCardinal ? '10' : '7');
+      text.setAttribute('font-size', isCardinal ? '11' : isMajor ? '8' : '6');
+      text.setAttribute('font-weight', isCardinal || isMajor ? '700' : '400');
       text.setAttribute('font-family', 'Consolas, monospace');
       text.setAttribute('fill', isCardinal ? '#1a1a2e' : '#0077b6');
-      text.setAttribute('opacity', isCardinal ? '0.8' : '0.5');
+      text.setAttribute('opacity', isCardinal ? '0.85' : isMajor ? '0.7' : '0.6');
       // Counter-rotate text so it stays upright
       text.setAttribute(
         'transform',

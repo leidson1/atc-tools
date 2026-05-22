@@ -5,6 +5,8 @@
 // Os testes de geometria tratam lon como x e lat como y — aproximação plana
 // válida nas escalas envolvidas (TMAs brasileiras).
 
+import { distanceNm } from './haversine.js';
+
 const toRad = (d) => (d * Math.PI) / 180;
 const toDeg = (r) => (r * 180) / Math.PI;
 
@@ -109,4 +111,37 @@ export function tmasCrossed(traj, tmaGeoJSON) {
     }
   }
   return crossed;
+}
+
+/**
+ * TMAs cruzadas com a distância (NM) do ponto de entrada na rota.
+ * @returns {Array<{id, name, feature, distNm}>}
+ */
+export function tmaEntriesAlong(traj, tmaGeoJSON) {
+  const cum = new Array(traj.length);
+  cum[0] = 0;
+  for (let i = 1; i < traj.length; i++) {
+    cum[i] = cum[i - 1] + distanceNm(traj[i - 1].lat, traj[i - 1].lon, traj[i].lat, traj[i].lon);
+  }
+
+  const out = [];
+  for (const feature of tmaGeoJSON.features) {
+    const rings = exteriorRings(feature.geometry);
+    let entryIdx = -1;
+    for (let i = 0; i < traj.length; i++) {
+      if (rings.some((r) => pointInRing(traj[i].lat, traj[i].lon, r))) {
+        entryIdx = i;
+        break;
+      }
+    }
+    if (entryIdx >= 0) {
+      out.push({
+        id: feature.properties.id || '',
+        name: feature.properties.name || '',
+        feature,
+        distNm: cum[entryIdx],
+      });
+    }
+  }
+  return out;
 }

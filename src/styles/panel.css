@@ -138,6 +138,34 @@
 .tma-none { font-size: 12px; color: var(--success); font-weight: 600; }
 .level-hint { font-size: 10px; color: var(--text-muted); margin-top: 8px; }
 
+/* === Flight params (Rota tab) === */
+.flight-params { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 11px; }
+.fp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fp-field { display: flex; flex-direction: column; gap: 4px; }
+.fp-field.fp-wide { grid-column: 1 / -1; }
+.fp-field > span { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+.fp-field input, .fp-field select {
+  background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);
+  border-radius: 8px; padding: 9px 10px; font-family: var(--font-mono); font-size: 14px; width: 100%;
+}
+.fp-field input:focus, .fp-field select:focus { outline: none; border-color: var(--border-focus); box-shadow: var(--glow); }
+
+/* === Timeline (FIR/TMA ingress) === */
+.tl-head { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-secondary); font-weight: 700; margin-top: 2px; }
+.tl-item { display: flex; align-items: center; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--border); }
+.tl-item:last-child { border-bottom: none; }
+.tl-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.tl-main { flex: 1; min-width: 0; }
+.tl-name { font-size: 12px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tl-kind { font-size: 8px; letter-spacing: 1px; color: var(--text-muted); border: 1px solid var(--border); padding: 1px 4px; border-radius: 4px; }
+.tl-sub { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 1px; }
+.tl-time { text-align: right; flex-shrink: 0; }
+.tl-eta { font-family: var(--font-mono); font-weight: 800; font-size: 14px; color: var(--accent); }
+.tl-dur { font-size: 10px; color: var(--text-muted); }
+.tl-badge { font-size: 8px; font-weight: 800; letter-spacing: .5px; padding: 1px 5px; border-radius: 10px; }
+.tl-badge.in { background: var(--warning); color: #1a1200; }
+.tl-badge.out { background: var(--border); color: var(--text-muted); }
+
 /* === Layers (Camadas tab) === */
 .layer-row {
   display: flex; align-items: center; justify-content: space-between;

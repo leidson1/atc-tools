@@ -5,6 +5,7 @@
  */
 
 import firGeoJSON from './fir-boundaries.json';
+import { distanceNm } from './lib/haversine.js';
 
 export const FIR_COLORS = {
   SBAZ: { color: '#e63946', fill: 'rgba(230, 57, 70, 0.06)', label: 'Amazônica' },
@@ -69,4 +70,24 @@ function getClosestFir(lat, lon) {
 
 export function getFirInfo(firIcao) {
   return FIR_COLORS[firIcao] || { color: '#666', fill: 'rgba(100,100,100,0.05)', label: firIcao };
+}
+
+/**
+ * Sequence of FIRs along a trajectory ([{lat,lon},...]).
+ * Returns [{ id, distNm }] where distNm is the accumulated distance at which
+ * each FIR begins (first item is the origin FIR at 0).
+ */
+export function firSequenceAlong(traj) {
+  const seq = [];
+  let prev = null;
+  let acc = 0;
+  for (let i = 0; i < traj.length; i++) {
+    if (i > 0) acc += distanceNm(traj[i - 1].lat, traj[i - 1].lon, traj[i].lat, traj[i].lon);
+    const id = getFirForPoint(traj[i].lat, traj[i].lon);
+    if (id !== prev) {
+      seq.push({ id, distNm: acc });
+      prev = id;
+    }
+  }
+  return seq;
 }

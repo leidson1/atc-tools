@@ -30,15 +30,15 @@
   border: 1px solid var(--border);
   border-left: 3px solid var(--accent);
   border-radius: var(--radius);
-  padding: 11px 13px;
+  padding: 13px 15px;
 }
-.base-chip-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
-.base-chip-icao { font-family: var(--font-mono); font-weight: 800; font-size: 18px; color: var(--accent); letter-spacing: 1px; }
+.base-chip-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; padding-bottom: 9px; border-bottom: 1px solid var(--border); }
+.base-chip-icao { font-family: var(--font-mono); font-weight: 800; font-size: 19px; color: var(--accent); letter-spacing: 1px; }
 .base-chip-name { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.base-chip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
-.base-chip-grid > span { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; color: var(--text-secondary); font-family: var(--font-mono); }
-.base-chip-grid i { color: var(--text-muted); font-style: normal; }
-.base-chip-fir { grid-column: 1 / -1; border-top: 1px solid var(--border); padding-top: 4px; margin-top: 2px; }
+.base-chip-grid { display: flex; flex-direction: column; gap: 6px; }
+.base-chip-grid > span { display: grid; grid-template-columns: 48px 1fr; align-items: baseline; gap: 10px; font-size: 12px; color: var(--text-primary); font-family: var(--font-mono); }
+.base-chip-grid i { color: var(--text-muted); font-style: normal; font-family: var(--font-main); font-size: 10px; text-transform: uppercase; letter-spacing: .6px; }
+.base-chip-fir { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px; }
 
 /* === Field (input + optional inline button) === */
 .field {
@@ -60,7 +60,7 @@
 }
 .field input::placeholder { color: var(--text-muted); letter-spacing: .3px; text-transform: none; }
 .field-btn {
-  background: var(--accent); color: #04141c; border: none;
+  background: var(--accent); color: var(--on-accent); border: none;
   padding: 9px 14px; border-radius: 9px; font-weight: 800; font-size: 12px;
   letter-spacing: .5px; cursor: pointer; flex-shrink: 0; transition: filter var(--transition);
 }
@@ -107,7 +107,7 @@
 .big-readout small { display: block; font-size: 10px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 3px; }
 #rdl-value {
   font-family: var(--font-mono); font-size: 38px; font-weight: 800; letter-spacing: 2px; color: var(--success);
-  text-shadow: 0 0 18px color-mix(in srgb, var(--success) 38%, transparent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--success) 20%, transparent);
 }
 .instruments { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .inst { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 11px; padding: 11px 6px; text-align: center; }

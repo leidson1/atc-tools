@@ -13,6 +13,7 @@
   --accent: #0077b6;
   --accent-light: #e0f2fe;
   --accent-dim: rgba(0, 119, 182, 0.1);
+  --on-accent: #ffffff;
   --warning: #d97706;
   --error: #dc2626;
   --success: #16a34a;
@@ -48,6 +49,7 @@
   --accent: #22d3ee;
   --accent-light: rgba(34, 211, 238, 0.14);
   --accent-dim: rgba(34, 211, 238, 0.08);
+  --on-accent: #04141c;
   --warning: #fbbf24;
   --error: #f87171;
   --success: #34d399;
@@ -151,7 +153,7 @@ body {
 .tab.active {
   background: var(--bg-secondary);
   color: var(--accent);
-  box-shadow: var(--glow);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), var(--glow);
 }
 .tab:hover:not(.active) { color: var(--text-secondary); }
 

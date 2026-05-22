@@ -3,82 +3,101 @@ import './styles/panel.css';
 import './styles/map.css';
 import './styles/components.css';
 
-import { calculateRdlFromPoint, getAerodromeInfo, lookupPoint } from './api.js';
-import { initMap, setAerodrome, showRdlOnMap, clearRdlVisuals, clearTrajectory } from './map.js';
+import { calculateRdl, getAerodromeInfo, lookupPoint } from './api.js';
+import { initMap, setAerodrome, showRdlOnMap } from './map.js';
 import { drawCompassRose } from './compass-rose.js';
 import { initAirspaceLayers, toggleLayer } from './airspace-layers.js';
 import { getFirForPoint, getFirInfo } from './fir-data.js';
 import { displayResult, clearHistory, initCopyButton, showToast } from './results-panel.js';
 import { initSettings, getDefaultAerodrome } from './settings.js';
 import { showWelcomeIfNeeded } from './welcome.js';
-import { initDrawer } from './drawer.js';
+import { initDrawer, closeDrawerIfMobile } from './drawer.js';
 import { initVersionIndicator } from './version-indicator.js';
-import { initFlightParams, computeRoute } from './trajectory.js';
+import { initTrajectory } from './trajectory.js';
 import { initAerodromeLayer, toggleAerodromeLayer } from './aerodrome-layer.js';
 
+// App state
 let baseAerodrome = null;
 let map = null;
 
 async function init() {
-  await showWelcomeIfNeeded();
+  // Show welcome screen on first run - waits for user to select base AD
+  const selectedBase = await showWelcomeIfNeeded();
 
+  // Initialize map
   map = initMap('map', onMapClick);
+
+  // Initialize airspace layers
   initAirspaceLayers(map);
   initAerodromeLayer(map);
+
+  // Initialize settings
   initSettings(onSettingsSave);
+
+  // Initialize copy button
   initCopyButton();
+
+  // Initialize mobile drawer
   initDrawer();
+
+  // Initialize version indicator (offline build only)
   initVersionIndicator();
-  initFlightParams();
+
+  // Initialize trajectory / TMA crossing tool
+  initTrajectory();
+
+  // Initialize tabs and theme toggle
   initTabs();
   initTheme();
 
+  // Target input - Enter to calculate
   const targetInput = document.getElementById('target-input');
   targetInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); onCalculate(); }
-  });
-  targetInput.addEventListener('input', () => { targetInput.value = targetInput.value.toUpperCase(); });
-
-  const fromInput = document.getElementById('traj-from');
-  fromInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); onCalculate(); }
-  });
-  fromInput.addEventListener('input', () => { fromInput.value = fromInput.value.toUpperCase(); });
-
-  document.getElementById('btn-calculate').addEventListener('click', onCalculate);
-
-  // Swap origin <-> destination
-  document.getElementById('btn-traj-swap')?.addEventListener('click', () => {
-    const from = document.getElementById('traj-from');
-    const to = document.getElementById('target-input');
-    [from.value, to.value] = [to.value, from.value];
-    if (to.value.trim()) onCalculate();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onCalculateClick();
+    }
   });
 
+  // Auto uppercase
+  targetInput.addEventListener('input', () => {
+    targetInput.value = targetInput.value.toUpperCase();
+  });
+
+  // Calculate button
+  document.getElementById('btn-calculate').addEventListener('click', onCalculateClick);
+
+  // Clear history button
   document.getElementById('btn-clear-history').addEventListener('click', clearHistory);
 
-  // Airspace layer toggles (header)
+  // Layer toggle switches (Camadas tab)
   setupLayerToggle('btn-toggle-fir', 'fir');
   setupLayerToggle('btn-toggle-tma', 'tma');
   setupLayerToggle('btn-toggle-ctr', 'ctr');
+
+  // Aerodrome layer toggle (canvas)
   const adBtn = document.getElementById('btn-toggle-ad');
   adBtn?.addEventListener('click', () => {
     adBtn.classList.toggle('active', toggleAerodromeLayer());
   });
 
+  // History click handler
   window.__onHistoryClick = (result) => {
-    activateTab('consulta');
-    clearTrajectory();
-    document.getElementById('traj-result')?.classList.add('hidden');
     displayResult(result);
     showRdlOnMap(result);
   };
 
+  // Keyboard shortcut: Ctrl+Enter to calculate
   document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === 'Enter') onCalculate();
+    if (e.ctrlKey && e.key === 'Enter') {
+      onCalculateClick();
+    }
   });
 
+  // Load base aerodrome
   await loadBaseAerodrome();
+
+  // Focus on target input
   targetInput.focus();
 }
 
@@ -100,10 +119,14 @@ async function loadBaseAerodrome() {
 function setBaseAerodrome(info) {
   baseAerodrome = info;
 
+  // Determine FIR
   const baseFir = getFirForPoint(info.arp_lat, info.arp_lon);
   const firInfo = getFirInfo(baseFir);
 
+  // Update header
   document.getElementById('header-base-icao').textContent = info.icao_code;
+
+  // Update base info card
   document.getElementById('base-name').textContent = info.name;
   document.getElementById('base-icao').textContent = info.icao_code;
   document.getElementById('base-city').textContent = `${info.city}/${info.state}`;
@@ -117,124 +140,125 @@ function setBaseAerodrome(info) {
     ? `${Math.abs(varMag).toFixed(1)}° ${varMag < 0 ? 'W' : 'E'}`
     : '--';
 
-  // Origem padrão = base
-  const fromInput = document.getElementById('traj-from');
-  if (fromInput) fromInput.value = info.icao_code;
+  // Update RDL label
   const rdlBaseLabel = document.getElementById('rdl-base-icao');
   if (rdlBaseLabel) rdlBaseLabel.textContent = info.icao_code;
 
+  // Update map
   setAerodrome(info.arp_lat, info.arp_lon, info.name, info.icao_code);
-  drawCompassRose(map, info.arp_lat, info.arp_lon, varMag || -21);
+
+  // Draw compass rose
+  const decl = varMag || -21;
+  drawCompassRose(map, info.arp_lat, info.arp_lon, decl);
+
   updateStatus(`FIR ${baseFir}`);
 }
 
-// Rota (opt-in): origem (campo De, padrão base) -> destino (campo Para),
-// com trajetória + TMA cruzadas (roxo) + linha do tempo.
-async function onCalculate() {
-  const destInput = document.getElementById('target-input');
-  const destRaw = destInput.value.trim();
-  if (!destRaw || destRaw.length < 2) {
-    showToast('Digite o destino (AD, fixo ou coordenada)', 'warning');
-    destInput.focus();
+async function onCalculateClick() {
+  if (!baseAerodrome) {
+    showToast('Aeródromo base não carregado', 'error');
     return;
   }
-  const fromRaw = (document.getElementById('traj-from').value.trim() || baseAerodrome?.icao_code || '').trim();
-  if (!fromRaw) {
-    showToast('Defina a origem ou o aeródromo base', 'error');
+
+  const targetIcao = document.getElementById('target-input').value.trim().toUpperCase();
+  if (!targetIcao || targetIcao.length < 2) {
+    showToast('Digite o indicativo (AD, fixo ou waypoint)', 'warning');
+    document.getElementById('target-input').focus();
     return;
   }
 
   const btn = document.getElementById('btn-calculate');
   const originalText = btn.textContent;
+  btn.textContent = 'Buscando...';
   btn.disabled = true;
-  btn.textContent = '...';
 
   try {
-    const origin = await lookupPoint(fromRaw);
-    const dest = await lookupPoint(destRaw);
+    const point = await lookupPoint(targetIcao);
 
-    const result = calculateRdlFromPoint(origin, dest.lat, dest.lon);
-    result.target_name = dest.name;
-    result.target_icao = dest.identifier;
-    result.target_type = dest.point_type;
+    const result = await calculateRdl(
+      baseAerodrome.icao_code,
+      point.lat,
+      point.lon
+    );
 
-    const destFir = getFirForPoint(dest.lat, dest.lon);
-    const firInfo = getFirInfo(destFir);
-    result.target_fir = destFir;
+    // Add target info
+    result.target_name = point.name;
+    result.target_icao = point.identifier;
+    result.target_type = point.point_type;
+    result.target_info = point.info;
 
-    activateTab('consulta');
+    // Determine FIR of target
+    const targetFir = getFirForPoint(point.lat, point.lon);
+    const firInfo = getFirInfo(targetFir);
+    result.target_fir = targetFir;
+    result.target_fir_label = firInfo.label;
+
+    // Display result
+    activateTab('radial');
     displayResult(result);
-    updateRdlHeader(origin.identifier || fromRaw, dest, destFir, firInfo);
+    showRdlOnMap(result);
 
-    // Rota é opt-in: limpa a radial de clique e desenha trajetória + TMA + tempos
-    clearRdlVisuals();
-    computeRoute(origin, dest);
+    // Update target name with FIR
+    const typeLabel = point.point_type === 'AD' ? '' : `[${point.point_type}] `;
+    document.getElementById('rdl-target-name').textContent =
+      `${typeLabel}${point.identifier} - ${point.name} ${point.info ? '(' + point.info + ')' : ''}`;
 
-    const note = dest.point_type === 'COORD' && dest.coord?.assumed ? ' — assumi S/W, confira!' : '';
-    showToast(`${origin.identifier || fromRaw} → ${dest.identifier}: RDL ${result.formatted}${note}`, note ? 'warning' : 'success');
+    // Show FIR in result
+    const firEl = document.getElementById('rdl-fir');
+    if (firEl) {
+      firEl.textContent = `${targetFir} (${firInfo.label})`;
+      firEl.style.color = firInfo.color;
+    }
+
+    if (point.point_type === 'COORD') {
+      const note = point.coord.assumed ? ' — assumi S/W, confira!' : '';
+      showToast(
+        `Coordenada ${point.name}${note} → RDL ${result.formatted} de ${baseAerodrome.icao_code}`,
+        point.coord.assumed ? 'warning' : 'success'
+      );
+    } else {
+      showToast(`${targetIcao}: RDL ${result.formatted} | FIR ${targetFir}`, 'success');
+    }
+    closeDrawerIfMobile();
   } catch (err) {
-    showToast(`Erro: ${err.message || err}`, 'error');
+    showToast(`Erro ao buscar ${targetIcao}: ${err}`, 'error');
   } finally {
-    btn.disabled = false;
     btn.textContent = originalText;
+    btn.disabled = false;
+    document.getElementById('target-input').select();
   }
 }
 
-// Atualiza o cabeçalho do cartão de resultado (alvo, origem do RDL, FIR).
-function updateRdlHeader(originLabel, dest, destFir, firInfo) {
-  const typeLabel = dest.point_type === 'AD' ? '' : `[${dest.point_type}] `;
-  document.getElementById('rdl-target-name').textContent =
-    `${typeLabel}${dest.identifier}${dest.name && dest.name !== dest.identifier ? ' - ' + dest.name : ''}`;
-  document.getElementById('rdl-base-icao').textContent = originLabel;
-  const firEl = document.getElementById('rdl-fir');
-  if (firEl) {
-    firEl.textContent = `${destFir} (${firInfo.label})`;
-    firEl.style.color = firInfo.color;
-  }
-}
-
-// Clique livre = radial rápida da BASE até o ponto: tracejado vermelho +
-// etiqueta com radial/distância. Sem rota, sem TMA roxa, sem mover o mapa.
-function onMapClick(lat, lon) {
+async function onMapClick(lat, lon) {
   if (!baseAerodrome) {
-    showToast('Aeródromo base ainda não carregado', 'warning');
+    showToast('Aeródromo base não carregado', 'warning');
     return;
   }
 
-  const origin = {
-    lat: baseAerodrome.arp_lat,
-    lon: baseAerodrome.arp_lon,
-    identifier: baseAerodrome.icao_code,
-    name: baseAerodrome.name,
-    magnetic_variation: baseAerodrome.magnetic_variation,
-  };
-  const dest = {
-    lat, lon,
-    identifier: `${lat.toFixed(4)}, ${lon.toFixed(4)}`,
-    name: '',
-    point_type: 'COORD',
-  };
+  try {
+    const result = await calculateRdl(baseAerodrome.icao_code, lat, lon);
+    result.target_name = `Ponto no mapa`;
+    result.target_icao = 'MAP';
 
-  const result = calculateRdlFromPoint(origin, lat, lon);
-  result.target_name = dest.name;
-  result.target_icao = dest.identifier;
-  result.target_type = dest.point_type;
+    const targetFir = getFirForPoint(lat, lon);
+    const firInfo = getFirInfo(targetFir);
+    result.target_fir = targetFir;
 
-  const destFir = getFirForPoint(lat, lon);
-  const firInfo = getFirInfo(destFir);
-  result.target_fir = destFir;
+    activateTab('radial');
+    displayResult(result);
+    showRdlOnMap(result);
 
-  // Modo radial limpo: remove rota/TMA roxa/linha do tempo de uma rota anterior.
-  clearTrajectory();
-  document.getElementById('traj-result')?.classList.add('hidden');
+    document.getElementById('rdl-target-name').textContent =
+      `Ponto: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
 
-  activateTab('consulta');
-  displayResult(result);
-  updateRdlHeader(baseAerodrome.icao_code, dest, destFir, firInfo);
-  showRdlOnMap(result, { fit: false, label: true });
-
-  // Deixa o ponto pronto pra virar rota, se quiser calcular depois.
-  document.getElementById('target-input').value = dest.identifier;
+    const firEl = document.getElementById('rdl-fir');
+    if (firEl) {
+      firEl.textContent = `${targetFir} (${firInfo.label})`;
+      firEl.style.color = firInfo.color;
+    }
+  } catch (err) {
+    showToast(`Erro no cálculo: ${err}`, 'error');
+  }
 }
 
 async function onSettingsSave(config) {
@@ -294,4 +318,5 @@ function updateStatus(text) {
   el.classList.add('connected');
 }
 
+// Start app
 document.addEventListener('DOMContentLoaded', init);

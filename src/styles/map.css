@@ -127,18 +127,3 @@
   font-weight: 700 !important;
   white-space: nowrap;
 }
-
-/* === RDL click label (etiqueta da radial no clique) === */
-.rdl-label {
-  background: #ffffff !important;
-  border: 1px solid #dc2626 !important;
-  border-radius: 7px !important;
-  padding: 3px 8px !important;
-  color: #b91c1c !important;
-  font-family: var(--font-mono) !important;
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  white-space: nowrap;
-  box-shadow: var(--shadow) !important;
-}
-.rdl-label.leaflet-tooltip-top::before { border-top-color: #dc2626 !important; }

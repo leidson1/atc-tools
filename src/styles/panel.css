@@ -28,27 +28,23 @@
 .base-chip {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 13px;
-  padding: 12px 13px;
+  border-radius: 12px;
+  padding: 10px 13px;
   position: relative;
   overflow: hidden;
 }
 .base-chip::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
-.base-chip-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.base-chip-icao { font-family: var(--font-mono); font-weight: 800; font-size: 20px; color: var(--accent); letter-spacing: 1px; line-height: 1; flex-shrink: 0; }
+.base-chip-head { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.base-chip-icao { font-family: var(--font-mono); font-weight: 800; font-size: 18px; color: var(--accent); letter-spacing: 1px; line-height: 1; flex-shrink: 0; }
 .base-chip-titles { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.base-chip-name { font-size: 12.5px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.base-chip-sub { font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.base-chip-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 11px; }
-.stat { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 9px; padding: 7px 9px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.stat i { font-style: normal; font-size: 9px; letter-spacing: .6px; text-transform: uppercase; color: var(--text-muted); }
-.stat b { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.stat-wide { grid-column: 1 / -1; }
-.stat-fir { background: var(--accent-dim); border-color: color-mix(in srgb, var(--accent) 28%, var(--border)); }
-.stat-fir b { color: var(--accent); }
-.base-chip-arp { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); }
-.base-chip-arp i { font-style: normal; font-size: 9px; letter-spacing: .6px; text-transform: uppercase; color: var(--text-muted); flex-shrink: 0; }
-.base-chip-arp span { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-secondary); }
+.base-chip-name { font-size: 12px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.base-chip-sub { font-size: 10.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.base-chip-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 14px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+.base-chip-meta > span { display: inline-flex; align-items: baseline; gap: 5px; font-size: 12px; white-space: nowrap; }
+.base-chip-meta i { font-style: normal; font-size: 9px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
+.base-chip-meta b { font-family: var(--font-mono); font-weight: 700; color: var(--text-primary); }
+.base-chip-meta .meta-fir b { color: var(--accent); }
+.base-chip-meta .meta-arp b { color: var(--text-secondary); font-weight: 600; }
 
 /* === Field (input + optional inline button) === */
 .field {
@@ -78,7 +74,8 @@
 .field-btn:hover { filter: brightness(1.06); }
 .field-btn:disabled { opacity: .6; cursor: default; }
 
-.hint { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.hint { font-size: 10.5px; color: var(--text-muted); line-height: 1.45; }
+.hint b { color: var(--text-secondary); font-family: var(--font-mono); font-weight: 600; }
 
 /* === Search results === */
 .search-results {
@@ -109,22 +106,27 @@
 /* === Result card (RDL) === */
 .result-card {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 13px; padding: 13px; display: flex; flex-direction: column; gap: 10px;
+  border-radius: 13px; padding: 12px; display: flex; flex-direction: column; gap: 9px;
   animation: fadeIn .3s ease;
 }
 .result-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.result-title { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.big-readout { text-align: center; }
-.big-readout small { display: block; font-size: 10px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 3px; }
+.result-title { font-size: 11.5px; color: var(--text-muted); font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.big-readout {
+  text-align: center;
+  background: color-mix(in srgb, var(--success) 9%, var(--bg-secondary));
+  border: 1px solid color-mix(in srgb, var(--success) 28%, var(--border));
+  border-radius: 11px; padding: 9px 8px;
+}
+.big-readout small { display: block; font-size: 9px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
 #rdl-value {
-  font-family: var(--font-mono); font-size: 34px; font-weight: 800; letter-spacing: 2px; color: var(--success);
-  text-shadow: 0 0 10px color-mix(in srgb, var(--success) 20%, transparent);
+  font-family: var(--font-mono); font-size: 33px; font-weight: 800; letter-spacing: 1px; color: var(--success);
+  text-shadow: none; line-height: 1.05;
 }
 .instruments { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
-.inst { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 9px 6px; text-align: center; }
+.inst { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 9px; padding: 8px 6px; text-align: center; }
 .inst-lbl { font-size: 9px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
-.inst-val { font-family: var(--font-mono); font-size: 20px; font-weight: 800; color: var(--accent); margin-top: 3px; text-shadow: var(--glow); }
-.result-foot { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 9px; }
+.inst-val { font-family: var(--font-mono); font-size: 19px; font-weight: 800; color: var(--accent); margin-top: 2px; text-shadow: var(--glow); }
+.result-foot { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 8px; }
 .result-foot strong { color: var(--text-secondary); font-family: var(--font-mono); font-weight: 700; }
 
 /* === Trajectory result === */

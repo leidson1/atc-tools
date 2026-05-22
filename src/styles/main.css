@@ -157,7 +157,7 @@ body {
 }
 .tab:hover:not(.active) { color: var(--text-secondary); }
 
-.tab-view { display: none; flex-direction: column; gap: 12px; padding: 14px 16px; }
+.tab-view { display: none; flex-direction: column; gap: 10px; padding: 14px 16px; }
 .tab-view.active { display: flex; animation: tabFade .22s ease; }
 @keyframes tabFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 

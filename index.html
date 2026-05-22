@@ -67,12 +67,12 @@
                 <span class="base-chip-sub" id="base-city">--</span>
               </div>
             </div>
-            <div class="base-chip-stats">
-              <div class="stat stat-fir stat-wide"><i>FIR</i><b id="base-fir">--</b></div>
-              <div class="stat"><i>Var mag</i><b id="base-var">--</b></div>
-              <div class="stat"><i>Elevação</i><b id="base-elev">--</b></div>
+            <div class="base-chip-meta">
+              <span class="meta-fir"><i>FIR</i><b id="base-fir">--</b></span>
+              <span><i>Var</i><b id="base-var">--</b></span>
+              <span><i>Elev</i><b id="base-elev">--</b></span>
+              <span class="meta-arp"><i>ARP</i><b id="base-arp">--</b></span>
             </div>
-            <div class="base-chip-arp"><i>Coordenadas ARP</i><span id="base-arp">--</span></div>
           </div>
 
           <div class="field">
@@ -81,7 +81,7 @@
             <button id="btn-calculate" class="field-btn">BUSCAR</button>
           </div>
           <div id="target-search-results" class="search-results hidden"></div>
-          <div class="hint">AD/Fixo (SDNC, UXAM) ou coord: 22°54'S 043°10'W · 2254S04310W · -22.9, -43.17</div>
+          <div class="hint">Ex.: <b>SDNC</b> · <b>UXAM</b> · <b>2254S04310W</b> · <b>-22.9, -43.17</b></div>
 
           <div id="rdl-result" class="result-card hidden">
             <div class="result-head">
@@ -89,7 +89,7 @@
               <button id="btn-copy-rdl" class="chip-btn" title="Copiar">copiar</button>
             </div>
             <div class="big-readout">
-              <small>RDL / DME de <span id="rdl-base-icao">SBPJ</span></small>
+              <small>RDL / DME · <span id="rdl-base-icao">SBPJ</span></small>
               <span id="rdl-value">---/--.-</span>
             </div>
             <div class="instruments">

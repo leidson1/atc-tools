@@ -4,7 +4,7 @@ import './styles/map.css';
 import './styles/components.css';
 
 import { calculateRdlFromPoint, getAerodromeInfo, lookupPoint } from './api.js';
-import { initMap, setAerodrome, showRdlOnMap } from './map.js';
+import { initMap, setAerodrome, showRdlOnMap, clearRdlVisuals, clearTrajectory } from './map.js';
 import { drawCompassRose } from './compass-rose.js';
 import { initAirspaceLayers, toggleLayer } from './airspace-layers.js';
 import { getFirForPoint, getFirInfo } from './fir-data.js';
@@ -68,6 +68,8 @@ async function init() {
 
   window.__onHistoryClick = (result) => {
     activateTab('consulta');
+    clearTrajectory();
+    document.getElementById('traj-result')?.classList.add('hidden');
     displayResult(result);
     showRdlOnMap(result);
   };
@@ -126,7 +128,8 @@ function setBaseAerodrome(info) {
   updateStatus(`FIR ${baseFir}`);
 }
 
-// Fluxo unificado: origem (campo De, padrão base) -> destino (campo Para)
+// Rota (opt-in): origem (campo De, padrão base) -> destino (campo Para),
+// com trajetória + TMA cruzadas (roxo) + linha do tempo.
 async function onCalculate() {
   const destInput = document.getElementById('target-input');
   const destRaw = destInput.value.trim();
@@ -161,18 +164,10 @@ async function onCalculate() {
 
     activateTab('consulta');
     displayResult(result);
+    updateRdlHeader(origin.identifier || fromRaw, dest, destFir, firInfo);
 
-    const typeLabel = dest.point_type === 'AD' ? '' : `[${dest.point_type}] `;
-    document.getElementById('rdl-target-name').textContent =
-      `${typeLabel}${dest.identifier}${dest.name && dest.name !== dest.identifier ? ' - ' + dest.name : ''}`;
-    document.getElementById('rdl-base-icao').textContent = origin.identifier || fromRaw;
-    const firEl = document.getElementById('rdl-fir');
-    if (firEl) {
-      firEl.textContent = `${destFir} (${firInfo.label})`;
-      firEl.style.color = firInfo.color;
-    }
-
-    // Linha do tempo FIR/TMA + desenho da rota no mapa
+    // Rota é opt-in: limpa a radial de clique e desenha trajetória + TMA + tempos
+    clearRdlVisuals();
     computeRoute(origin, dest);
 
     const note = dest.point_type === 'COORD' && dest.coord?.assumed ? ' — assumi S/W, confira!' : '';
@@ -185,10 +180,61 @@ async function onCalculate() {
   }
 }
 
-async function onMapClick(lat, lon) {
-  const destInput = document.getElementById('target-input');
-  destInput.value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-  onCalculate();
+// Atualiza o cabeçalho do cartão de resultado (alvo, origem do RDL, FIR).
+function updateRdlHeader(originLabel, dest, destFir, firInfo) {
+  const typeLabel = dest.point_type === 'AD' ? '' : `[${dest.point_type}] `;
+  document.getElementById('rdl-target-name').textContent =
+    `${typeLabel}${dest.identifier}${dest.name && dest.name !== dest.identifier ? ' - ' + dest.name : ''}`;
+  document.getElementById('rdl-base-icao').textContent = originLabel;
+  const firEl = document.getElementById('rdl-fir');
+  if (firEl) {
+    firEl.textContent = `${destFir} (${firInfo.label})`;
+    firEl.style.color = firInfo.color;
+  }
+}
+
+// Clique livre = radial rápida da BASE até o ponto: tracejado vermelho +
+// etiqueta com radial/distância. Sem rota, sem TMA roxa, sem mover o mapa.
+function onMapClick(lat, lon) {
+  if (!baseAerodrome) {
+    showToast('Aeródromo base ainda não carregado', 'warning');
+    return;
+  }
+
+  const origin = {
+    lat: baseAerodrome.arp_lat,
+    lon: baseAerodrome.arp_lon,
+    identifier: baseAerodrome.icao_code,
+    name: baseAerodrome.name,
+    magnetic_variation: baseAerodrome.magnetic_variation,
+  };
+  const dest = {
+    lat, lon,
+    identifier: `${lat.toFixed(4)}, ${lon.toFixed(4)}`,
+    name: '',
+    point_type: 'COORD',
+  };
+
+  const result = calculateRdlFromPoint(origin, lat, lon);
+  result.target_name = dest.name;
+  result.target_icao = dest.identifier;
+  result.target_type = dest.point_type;
+
+  const destFir = getFirForPoint(lat, lon);
+  const firInfo = getFirInfo(destFir);
+  result.target_fir = destFir;
+
+  // Modo radial limpo: remove rota/TMA roxa/linha do tempo de uma rota anterior.
+  clearTrajectory();
+  document.getElementById('traj-result')?.classList.add('hidden');
+
+  activateTab('consulta');
+  displayResult(result);
+  updateRdlHeader(baseAerodrome.icao_code, dest, destFir, firInfo);
+  showRdlOnMap(result, { fit: false, label: true });
+
+  // Deixa o ponto pronto pra virar rota, se quiser calcular depois.
+  document.getElementById('target-input').value = dest.identifier;
 }
 
 async function onSettingsSave(config) {

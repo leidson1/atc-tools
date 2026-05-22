@@ -124,8 +124,12 @@ function clearDistanceCircles() {
   distanceCircles = [];
 }
 
-export function showRdlOnMap(result) {
+// Desenha a radial (tracejado vermelho) da base até o ponto.
+//   opts.fit   -> reenquadra o mapa para mostrar os dois pontos (default true)
+//   opts.label -> etiqueta permanente no ponto com radial/distância (clique livre)
+export function showRdlOnMap(result, opts = {}) {
   if (!map) return;
+  const { fit = true, label = false } = opts;
 
   clearRdlVisuals();
 
@@ -136,27 +140,38 @@ export function showRdlOnMap(result) {
   radialLine = L.polyline([aeroPos, pointPos], {
     color: '#dc2626',
     weight: 2,
-    opacity: 0.8,
+    opacity: 0.85,
     dashArray: '8 4',
   }).addTo(map);
 
-  // Draw point marker with popup
-  pointMarker = L.marker(pointPos, { icon: pointIcon })
-    .addTo(map)
-    .bindPopup(
-      `<div class="popup-rdl">
-        ${result.target_name ? `<span class="detail">${result.target_icao || ''} ${result.target_name}</span>` : ''}
-        <span class="rdl">${result.aerodrome_icao} RDL ${result.formatted}</span>
-        <span class="detail">Mag: ${result.radial_magnetic.toFixed(1)}° | True: ${result.radial_true.toFixed(1)}°</span>
-        <span class="detail">${result.distance_nm.toFixed(1)} NM</span>
-      </div>`,
-      { className: 'dark-popup' }
-    )
-    .openPopup();
+  pointMarker = L.marker(pointPos, { icon: pointIcon }).addTo(map);
 
-  // Fit bounds to show both points
-  const bounds = L.latLngBounds([aeroPos, pointPos]);
-  map.fitBounds(bounds, { padding: [60, 60], maxZoom: 10 });
+  if (label) {
+    // Etiqueta permanente: radial magnética + distância no ponto clicado
+    pointMarker
+      .bindTooltip(
+        `${result.aerodrome_icao} ${String(Math.round(result.radial_magnetic)).padStart(3, '0')}° · ${result.distance_nm.toFixed(1)} NM`,
+        { permanent: true, direction: 'top', className: 'rdl-label', offset: [0, -10] }
+      )
+      .openTooltip();
+  } else {
+    pointMarker
+      .bindPopup(
+        `<div class="popup-rdl">
+          ${result.target_name ? `<span class="detail">${result.target_icao || ''} ${result.target_name}</span>` : ''}
+          <span class="rdl">${result.aerodrome_icao} RDL ${result.formatted}</span>
+          <span class="detail">Mag: ${result.radial_magnetic.toFixed(1)}° | True: ${result.radial_true.toFixed(1)}°</span>
+          <span class="detail">${result.distance_nm.toFixed(1)} NM</span>
+        </div>`,
+        { className: 'dark-popup' }
+      )
+      .openPopup();
+  }
+
+  if (fit) {
+    const bounds = L.latLngBounds([aeroPos, pointPos]);
+    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 10 });
+  }
 }
 
 export function clearRdlVisuals() {

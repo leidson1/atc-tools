@@ -52,35 +52,66 @@
 
         <!-- Tabs -->
         <div class="tabs" role="tablist">
-          <button class="tab active" data-view="radial">Radial</button>
-          <button class="tab" data-view="rota">Rota</button>
+          <button class="tab active" data-view="consulta">Consulta</button>
           <button class="tab" data-view="historico">Histórico</button>
         </div>
 
-        <!-- VIEW: RADIAL -->
-        <div class="tab-view active" id="view-radial">
-          <div class="base-chip">
-            <div class="base-chip-head">
-              <span class="base-chip-icao" id="base-icao">--</span>
-              <span class="base-chip-name" id="base-name">Carregando...</span>
+        <!-- VIEW: CONSULTA -->
+        <div class="tab-view active" id="view-consulta">
+          <div class="od-block">
+            <div class="od-row">
+              <span class="od-tag">DE</span>
+              <input type="text" id="traj-from" placeholder="Origem (base)" maxlength="40" autocomplete="off" />
+              <button id="btn-traj-swap" class="od-swap" title="Inverter origem/destino" aria-label="Inverter">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l-3 3 3 3"/><path d="M4 13h16"/><path d="M17 14l3-3-3-3"/><path d="M20 11H4"/></svg>
+              </button>
             </div>
-            <div class="base-chip-grid">
-              <span><i>Cidade</i><span id="base-city">--</span></span>
-              <span><i>ARP</i><span id="base-arp">--</span></span>
-              <span><i>Elev</i><span id="base-elev">--</span></span>
-              <span><i>Var</i><span id="base-var">--</span></span>
-              <span class="base-chip-fir"><i>FIR</i><span id="base-fir">--</span></span>
+            <div class="od-row">
+              <span class="od-tag od-tag-to">PARA</span>
+              <input type="text" id="target-input" placeholder="Destino: AD, fixo ou coordenada" maxlength="40" autocomplete="off" />
+              <button id="btn-calculate" class="od-go" title="Calcular">VER</button>
+            </div>
+          </div>
+          <div class="hint">AD/Fixo (SDNC, UXAM) ou coordenada (22°54'S 043°10'W · 2254S04310W · -22.9,-43.17)</div>
+
+          <!-- Opções avançadas (recolhível) -->
+          <button type="button" id="btn-opts" class="opts-toggle" aria-expanded="false">
+            <svg class="opts-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            Tempo de voo &amp; detalhes
+          </button>
+          <div id="opts-panel" class="opts-panel hidden">
+            <div class="flight-params">
+              <div class="fp-grid">
+                <label class="fp-field">
+                  <span>Perfil</span>
+                  <select id="fp-profile">
+                    <option value="jato">Jato</option>
+                    <option value="turbo">Turboélice</option>
+                    <option value="leve">Leve / Pistão</option>
+                  </select>
+                </label>
+                <label class="fp-field"><span>TAS (kt)</span><input id="fp-tas" inputmode="numeric" value="460" autocomplete="off" /></label>
+                <label class="fp-field"><span>Nível (FL)</span><input id="fp-fl" inputmode="numeric" value="350" autocomplete="off" /></label>
+                <label class="fp-field"><span>Decolagem (Z)</span><input id="fp-dep" placeholder="--:--" autocomplete="off" /></label>
+                <label class="fp-field fp-wide"><span>Vento (opcional)</span><input id="fp-wind" placeholder="ex: 270/40" autocomplete="off" /></label>
+              </div>
+            </div>
+            <div class="base-chip">
+              <div class="base-chip-head">
+                <span class="base-chip-icao" id="base-icao">--</span>
+                <span class="base-chip-name" id="base-name">Carregando...</span>
+              </div>
+              <div class="base-chip-grid">
+                <span><i>Cidade</i><span id="base-city">--</span></span>
+                <span><i>ARP</i><span id="base-arp">--</span></span>
+                <span><i>Elev</i><span id="base-elev">--</span></span>
+                <span><i>Var</i><span id="base-var">--</span></span>
+                <span class="base-chip-fir"><i>FIR</i><span id="base-fir">--</span></span>
+              </div>
             </div>
           </div>
 
-          <div class="field">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <input type="text" id="target-input" placeholder="AD, fixo ou coordenada" maxlength="40" autocomplete="off" />
-            <button id="btn-calculate" class="field-btn">BUSCAR</button>
-          </div>
-          <div id="target-search-results" class="search-results hidden"></div>
-          <div class="hint">AD/Fixo (SDNC, UXAM) ou coord: 22°54'S 043°10'W · 2254S04310W · -22.9, -43.17</div>
-
+          <!-- Resultado: RDL/DME -->
           <div id="rdl-result" class="result-card hidden">
             <div class="result-head">
               <span id="rdl-target-name" class="result-title">--</span>
@@ -100,44 +131,8 @@
               <span>FIR <strong id="rdl-fir">--</strong></span>
             </div>
           </div>
-        </div>
 
-        <!-- VIEW: ROTA -->
-        <div class="tab-view" id="view-rota">
-          <div class="field">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z"/></svg>
-            <input type="text" id="traj-from" placeholder="Origem: AD, fixo ou coord" maxlength="40" autocomplete="off" />
-          </div>
-          <button id="btn-traj-swap" class="swap-btn" title="Inverter origem/destino">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l-3 3 3 3"/><path d="M4 13h16"/><path d="M17 14l3-3-3-3"/><path d="M20 11H4"/></svg>
-            inverter
-          </button>
-          <div class="field">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z"/></svg>
-            <input type="text" id="traj-to" placeholder="Destino: AD, fixo ou coord" maxlength="40" autocomplete="off" />
-          </div>
-          <div class="rota-actions">
-            <button id="btn-trajectory" class="btn-primary btn-full">TRAÇAR</button>
-            <button id="btn-trajectory-clear" class="chip-btn" title="Limpar trajetória">limpar</button>
-          </div>
-
-          <div class="flight-params">
-            <div class="fp-grid">
-              <label class="fp-field">
-                <span>Perfil</span>
-                <select id="fp-profile">
-                  <option value="jato">Jato</option>
-                  <option value="turbo">Turboélice</option>
-                  <option value="leve">Leve / Pistão</option>
-                </select>
-              </label>
-              <label class="fp-field"><span>TAS (kt)</span><input id="fp-tas" inputmode="numeric" value="460" autocomplete="off" /></label>
-              <label class="fp-field"><span>Nível (FL)</span><input id="fp-fl" inputmode="numeric" value="350" autocomplete="off" /></label>
-              <label class="fp-field"><span>Decolagem (Z)</span><input id="fp-dep" placeholder="--:--" autocomplete="off" /></label>
-              <label class="fp-field fp-wide"><span>Vento (opcional)</span><input id="fp-wind" placeholder="ex: 270/40" autocomplete="off" /></label>
-            </div>
-          </div>
-
+          <!-- Resultado: linha do tempo FIR/TMA -->
           <div id="traj-result" class="hidden"></div>
         </div>
 
@@ -221,7 +216,7 @@
         </div>
 
         <button id="btn-welcome-start" class="btn-primary btn-full welcome-btn" disabled>INICIAR</button>
-        <p class="welcome-version">v0.9.3</p>
+        <p class="welcome-version">v0.10.0</p>
       </div>
     </div>
 

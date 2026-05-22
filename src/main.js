@@ -14,7 +14,7 @@ import { showWelcomeIfNeeded } from './welcome.js';
 import { initDrawer, closeDrawerIfMobile } from './drawer.js';
 import { initVersionIndicator } from './version-indicator.js';
 import { initTrajectory } from './trajectory.js';
-import { initAerodromeLayer, toggleAerodromeLayer, aerodromeCount } from './aerodrome-layer.js';
+import { initAerodromeLayer, toggleAerodromeLayer } from './aerodrome-layer.js';
 
 // App state
 let baseAerodrome = null;
@@ -75,12 +75,10 @@ async function init() {
   setupLayerToggle('btn-toggle-tma', 'tma');
   setupLayerToggle('btn-toggle-ctr', 'ctr');
 
-  // Aerodrome layer (canvas)
-  const adCount = document.getElementById('ad-count');
-  if (adCount) adCount.textContent = `${aerodromeCount().toLocaleString('pt-BR')} cadastrados`;
-  const adRow = document.getElementById('btn-toggle-ad');
-  adRow?.addEventListener('click', () => {
-    adRow.classList.toggle('active', toggleAerodromeLayer());
+  // Aerodrome layer toggle (canvas)
+  const adBtn = document.getElementById('btn-toggle-ad');
+  adBtn?.addEventListener('click', () => {
+    adBtn.classList.toggle('active', toggleAerodromeLayer());
   });
 
   // History click handler
@@ -315,6 +313,7 @@ function initTabs() {
 
 function updateStatus(text) {
   const el = document.getElementById('connection-status');
+  if (!el) return;
   el.textContent = text;
   el.classList.add('connected');
 }

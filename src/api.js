@@ -86,6 +86,30 @@ export async function calculateRdlBatch(aerodromeIcao, points) {
   );
 }
 
+// RDL/DME entre dois pontos quaisquer (origem pode ser AD, fixo ou coordenada).
+export function calculateRdlFromPoint(origin, destLat, destLon) {
+  const trueBrg = trueBearing(origin.lat, origin.lon, destLat, destLon);
+  const decl = origin.magnetic_variation != null
+    ? origin.magnetic_variation
+    : magneticDeclination(origin.lat, origin.lon);
+  const magBrg = normalizeBearing(trueBrg - decl);
+  const dist = distanceNm(origin.lat, origin.lon, destLat, destLon);
+  return {
+    radial_magnetic: Math.round(magBrg * 10) / 10,
+    radial_true: Math.round(trueBrg * 10) / 10,
+    distance_nm: Math.round(dist * 10) / 10,
+    magnetic_declination: decl,
+    aerodrome_icao: origin.identifier || origin.icao_code || '',
+    aerodrome_name: origin.name || '',
+    aerodrome_lat: origin.lat,
+    aerodrome_lon: origin.lon,
+    point_lat: destLat,
+    point_lon: destLon,
+    formatted: `${String(Math.round(magBrg)).padStart(3, '0')}/${dist.toFixed(1)}`,
+    timestamp: String(Math.floor(Date.now() / 1000)),
+  };
+}
+
 export async function lookupPoint(identifier) {
   const id = identifier.trim().toUpperCase();
 

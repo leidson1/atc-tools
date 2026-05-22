@@ -4,9 +4,9 @@
 // procedimentos; assume rota direta. Vento é opcional.
 
 export const PROFILES = {
-  jato: { label: 'Jato', cruiseTAS: 460, climbRate: 2200, climbGS: 300 },
-  turbo: { label: 'Turboélice', cruiseTAS: 290, climbRate: 1500, climbGS: 200 },
-  leve: { label: 'Leve / Pistão', cruiseTAS: 140, climbRate: 700, climbGS: 100 },
+  jato: { label: 'Jato', cruiseTAS: 460, climbRate: 2200, climbGS: 300, descentRate: 1800, descentGS: 320 },
+  turbo: { label: 'Turboélice', cruiseTAS: 290, climbRate: 1500, climbGS: 200, descentRate: 1500, descentGS: 250 },
+  leve: { label: 'Leve / Pistão', cruiseTAS: 140, climbRate: 700, climbGS: 100, descentRate: 600, descentGS: 120 },
 };
 
 // Componente de vento de proa (kt). Positivo = proa (reduz GS); negativo = cauda.
@@ -16,15 +16,35 @@ export function headwindComponent(windFrom, windKt, track) {
 }
 
 // Tempo (minutos) para percorrer `distNm` desde a decolagem.
-export function timeToDistanceMin(distNm, { fl, tas, climbRate, climbGS, headwind = 0 }) {
+// Perfil de 3 fases: subida (0->FL), cruzeiro, descida (TOD->destino).
+// `totalDist` habilita a fase de descida; sem ele, considera só subida+cruzeiro.
+export function timeToDistanceMin(distNm, {
+  fl, tas, climbRate, climbGS, descentRate, descentGS, headwind = 0, totalDist = null,
+}) {
   const cruiseGS = Math.max(60, tas - headwind);
   const climbGSeff = Math.max(40, climbGS - headwind);
+  const descentGSeff = Math.max(40, (descentGS || climbGS) - headwind);
   const climbAltFt = fl * 100;
+
   const climbTimeMin = climbAltFt / climbRate;
   const climbDistNm = climbGSeff * (climbTimeMin / 60);
 
+  let todDist = Infinity;
+  let descentDistNm = 0;
+  if (totalDist != null && descentRate) {
+    const descentTimeMin = climbAltFt / descentRate;
+    descentDistNm = descentGSeff * (descentTimeMin / 60);
+    todDist = totalDist - descentDistNm;
+  }
+  // Rota curta: subida e descida se sobrepõem -> ignora a descida.
+  if (todDist <= climbDistNm) todDist = Infinity;
+
   if (distNm <= climbDistNm) {
     return (distNm / climbGSeff) * 60;
+  }
+  if (distNm >= todDist) {
+    const timeToTod = climbTimeMin + ((todDist - climbDistNm) / cruiseGS) * 60;
+    return timeToTod + ((distNm - todDist) / descentGSeff) * 60;
   }
   return climbTimeMin + ((distNm - climbDistNm) / cruiseGS) * 60;
 }

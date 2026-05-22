@@ -11,14 +11,18 @@ import {
   PROFILES, headwindComponent, timeToDistanceMin, parseHHMM, formatHHMM, parseWind,
 } from './lib/flight-time.js';
 
-let lastEvents = []; // [{kind:'FIR'|'TMA', id, name, distNm, feature?}]
+const ORIGIN_NM = 3; // eventos a menos disso são "origem", não ingresso
+
+let lastEvents = [];   // ingressos à frente: [{kind, id, name, distNm, feature?}]
+let lastOrigin = null; // { id, name } da FIR de origem
+let lastDest = null;   // { distNm, id, name, type }
 let lastTrack = 0;
 
 export function initTrajectory() {
   document.getElementById('btn-trajectory')?.addEventListener('click', onTrace);
   document.getElementById('btn-trajectory-clear')?.addEventListener('click', () => {
     clearTrajectory();
-    lastEvents = [];
+    lastEvents = []; lastDest = null; lastOrigin = null;
     document.getElementById('traj-result')?.classList.add('hidden');
   });
   document.getElementById('btn-traj-swap')?.addEventListener('click', () => {
@@ -35,7 +39,7 @@ export function initTrajectory() {
     el?.addEventListener('input', () => { el.value = el.value.toUpperCase(); });
   }
 
-  // Flight parameter inputs -> recompute timeline live
+  // Parâmetros de voo: recalculam a linha do tempo ao vivo (sem re-traçar)
   const profileSel = document.getElementById('fp-profile');
   profileSel?.addEventListener('change', () => {
     const p = PROFILES[profileSel.value];
@@ -43,7 +47,9 @@ export function initTrajectory() {
     renderTimeline();
   });
   for (const id of ['fp-tas', 'fp-fl', 'fp-dep', 'fp-wind']) {
-    document.getElementById(id)?.addEventListener('input', renderTimeline);
+    const el = document.getElementById(id);
+    el?.addEventListener('input', renderTimeline);
+    el?.addEventListener('change', renderTimeline);
   }
 }
 
@@ -70,21 +76,26 @@ async function onTrace() {
     const mb = normalizeBearing(tb - magneticDeclination(a.lat, a.lon));
     lastTrack = tb;
 
-    const firs = firSequenceAlong(traj).map((f, i) => ({
-      kind: 'FIR', id: f.id, name: getFirInfo(f.id).label, distNm: f.distNm, origin: i === 0,
-    }));
-    const tmas = tmaEntriesAlong(traj, tmaGeoJSON).map((t) => ({
-      kind: 'TMA', id: t.id, name: t.name, distNm: t.distNm, feature: t.feature,
-    }));
-    lastEvents = [...firs, ...tmas].sort((x, y) => x.distNm - y.distNm);
+    const firsRaw = firSequenceAlong(traj);
+    const tmasRaw = tmaEntriesAlong(traj, tmaGeoJSON);
 
-    showTrajectory(a, b, traj, tmas);
+    const firEvents = firsRaw
+      .filter((f) => f.distNm >= ORIGIN_NM)
+      .map((f) => ({ kind: 'FIR', id: f.id, name: getFirInfo(f.id).label, distNm: f.distNm }));
+    const tmaEvents = tmasRaw
+      .filter((t) => t.distNm >= ORIGIN_NM)
+      .map((t) => ({ kind: 'TMA', id: t.id, name: t.name, distNm: t.distNm, feature: t.feature }));
+
+    lastEvents = [...firEvents, ...tmaEvents].sort((x, y) => x.distNm - y.distNm);
+    lastOrigin = { id: firsRaw[0].id, name: getFirInfo(firsRaw[0].id).label };
+    lastDest = { distNm: dist, id: b.identifier, name: b.name, type: b.point_type };
+
+    showTrajectory(a, b, traj, tmasRaw);
     renderResult(a, b, dist, mb, tb);
     renderTimeline();
 
-    const nFir = firs.length - 1; // excl. origem
     showToast(
-      nFir > 0 ? `Cruza ${nFir} fronteira(s) de FIR + ${tmas.length} TMA(s)` : `${tmas.length} TMA(s) na rota`,
+      lastEvents.length ? `Cruza ${lastEvents.length} FIR/TMA até o destino` : 'Sem cruzamentos até o destino',
       'success'
     );
   } catch (err) {
@@ -137,16 +148,22 @@ function renderResult(a, b, dist, mb, tb) {
         <div class="inst"><div class="inst-lbl">Mag</div><div class="inst-val">${pad3(mb)}°</div></div>
         <div class="inst"><div class="inst-lbl">True</div><div class="inst-val">${pad3(tb)}°</div></div>
       </div>
-      <div class="tl-head">Ingresso em FIR / TMA</div>
+      <div class="tl-head">Linha do tempo</div>
       <div id="traj-timeline"></div>
       <div class="level-hint" id="traj-tl-hint"></div>
     </div>`;
   el.classList.remove('hidden');
 }
 
+function timeCell(distNm, opts, dep) {
+  const t = timeToDistanceMin(distNm, opts);
+  const eta = dep != null ? `${formatHHMM(dep + t)}Z` : '';
+  return `<div class="tl-eta">${eta || '+' + fmtDur(t)}</div>${eta ? `<div class="tl-dur">+${fmtDur(t)}</div>` : ''}`;
+}
+
 function renderTimeline() {
   const tl = document.getElementById('traj-timeline');
-  if (!tl || !lastEvents.length) return;
+  if (!tl || !lastDest) return;
 
   const profile = PROFILES[document.getElementById('fp-profile')?.value] || PROFILES.jato;
   const tas = parseInt(document.getElementById('fp-tas')?.value, 10) || profile.cruiseTAS;
@@ -156,9 +173,26 @@ function renderTimeline() {
   const headwind = wind ? headwindComponent(wind.from, wind.kt, lastTrack) : 0;
   const acFt = fl * 100;
 
-  const opts = { fl, tas, climbRate: profile.climbRate, climbGS: profile.climbGS, headwind };
+  const opts = {
+    fl, tas, climbRate: profile.climbRate, climbGS: profile.climbGS,
+    descentRate: profile.descentRate, descentGS: profile.descentGS,
+    headwind, totalDist: lastDest.distNm,
+  };
 
-  tl.innerHTML = lastEvents.map((ev) => {
+  const rows = [];
+
+  // Origem (contexto, sem tempo)
+  if (lastOrigin) {
+    rows.push(`<div class="tl-item tl-origin">
+      <span class="tl-dot" style="background:#0891b2"></span>
+      <div class="tl-main"><div class="tl-name">${lastOrigin.id} · ${lastOrigin.name} <span class="tl-kind">FIR</span></div>
+      <div class="tl-sub">origem</div></div>
+      <div class="tl-time"><div class="tl-eta" style="color:var(--text-muted)">saída</div></div>
+    </div>`);
+  }
+
+  // Ingressos à frente
+  for (const ev of lastEvents) {
     const isFir = ev.kind === 'FIR';
     const color = isFir ? '#0891b2' : '#9b5de5';
     let sub = `@ ${ev.distNm.toFixed(0)} NM`;
@@ -174,28 +208,31 @@ function renderTimeline() {
         badge = `<span class="tl-badge ${inside ? 'in' : 'out'}">${inside ? 'DENTRO' : 'fora'}</span>`;
       }
     }
-    let timeHtml;
-    if (ev.origin) {
-      timeHtml = `<div class="tl-eta">origem</div>`;
-    } else {
-      const t = timeToDistanceMin(ev.distNm, opts);
-      const eta = dep != null ? `${formatHHMM(dep + t)}Z` : '';
-      timeHtml = `<div class="tl-eta">${eta || '+' + fmtDur(t)}</div>${eta ? `<div class="tl-dur">+${fmtDur(t)}</div>` : ''}`;
-    }
-    return `<div class="tl-item">
+    rows.push(`<div class="tl-item">
       <span class="tl-dot" style="background:${color}"></span>
       <div class="tl-main">
         <div class="tl-name">${ev.id || ev.name} ${isFir ? `· ${ev.name}` : ''} <span class="tl-kind">${ev.kind}</span> ${badge}</div>
         <div class="tl-sub">${sub}</div>
       </div>
-      <div class="tl-time">${timeHtml}</div>
-    </div>`;
-  }).join('');
+      <div class="tl-time">${timeCell(ev.distNm, opts, dep)}</div>
+    </div>`);
+  }
+
+  // Destino (chegada)
+  const destName = lastDest.name && lastDest.name !== lastDest.id ? ` · ${lastDest.name}` : '';
+  rows.push(`<div class="tl-item tl-dest">
+    <span class="tl-dot" style="background:#16a34a"></span>
+    <div class="tl-main"><div class="tl-name">${lastDest.id}${destName} <span class="tl-kind">DESTINO</span></div>
+    <div class="tl-sub">@ ${lastDest.distNm.toFixed(0)} NM</div></div>
+    <div class="tl-time">${timeCell(lastDest.distNm, opts, dep)}</div>
+  </div>`);
+
+  tl.innerHTML = rows.join('');
 
   const hint = document.getElementById('traj-tl-hint');
   if (hint) {
     hint.textContent = dep == null
-      ? 'Informe a decolagem (HH:MM Z) para ver os horários de ingresso.'
-      : `Estimativa em rota direta, ${profile.label} TAS ${tas}kt no FL${fl}${wind ? `, vento ${wind.from}/${wind.kt}` : ''}.`;
+      ? 'Informe a decolagem (HH:MM Z) para ver os horários. Trocar perfil/TAS/nível recalcula na hora.'
+      : `${profile.label} · TAS ${tas}kt · FL${fl}${wind ? ` · vento ${wind.from}/${wind.kt}` : ''} · estimativa em rota direta.`;
   }
 }

@@ -165,6 +165,9 @@
 .tl-badge { font-size: 8px; font-weight: 800; letter-spacing: .5px; padding: 1px 5px; border-radius: 10px; }
 .tl-badge.in { background: var(--warning); color: #1a1200; }
 .tl-badge.out { background: var(--border); color: var(--text-muted); }
+.tl-origin .tl-name, .tl-origin .tl-sub { opacity: .7; }
+.tl-dest { background: color-mix(in srgb, var(--success) 9%, transparent); border-radius: 9px; border-bottom: none; padding-left: 8px; padding-right: 8px; }
+.tl-dest .tl-eta { color: var(--success); }
 
 /* === Layers (Camadas tab) === */
 .layer-row {

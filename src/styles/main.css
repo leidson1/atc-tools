@@ -125,7 +125,8 @@ body {
 /* === Tabs === */
 .tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: 4px;
   background: var(--bg-card);
   border: 1px solid var(--border);

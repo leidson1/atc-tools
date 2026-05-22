@@ -193,6 +193,7 @@ export function showTrajectory(a, b, traj, crossed) {
     const layer = L.geoJSON(
       { type: 'FeatureCollection', features: crossed.map((c) => c.feature) },
       {
+        interactive: false,
         style: {
           color: '#9b5de5',
           weight: 2,
@@ -201,11 +202,6 @@ export function showTrajectory(a, b, traj, crossed) {
           fillOpacity: 0.18,
           dashArray: '4 3',
         },
-        onEachFeature: (f, l) =>
-          l.bindTooltip(
-            `<strong>${f.properties.id || ''}</strong>${f.properties.name ? '<br>' + f.properties.name : ''}`,
-            { sticky: true, className: 'airspace-tooltip' }
-          ),
       }
     ).addTo(map);
     trajectoryLayers.push(layer);

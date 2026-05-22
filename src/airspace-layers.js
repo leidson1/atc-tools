@@ -98,6 +98,7 @@ function createLayer(type) {
   const style = STYLES[type];
 
   info.layer = L.geoJSON(info.data, {
+    interactive: false,
     style: () => ({
       color: style.color,
       weight: style.weight,
@@ -106,14 +107,6 @@ function createLayer(type) {
       fillColor: style.fillColor || 'transparent',
       fillOpacity: style.fillOpacity || 0,
     }),
-    onEachFeature: (feature, layer) => {
-      const name = feature.properties.name || feature.properties.id || '';
-      const id = feature.properties.id || '';
-      layer.bindTooltip(
-        `<strong>${id}</strong>${name ? '<br>' + name : ''}`,
-        { sticky: true, className: 'airspace-tooltip', direction: 'center' }
-      );
-    },
   }).addTo(mapRef);
 
   // Add labels at polygon centroids (only for FIR - TMAs and CTRs have too many)

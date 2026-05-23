@@ -70,6 +70,14 @@
   display: block;
 }
 
+.popup-rdl .loc {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+
 /* === Aerodrome Marker === */
 .aerodrome-marker {
   display: flex;

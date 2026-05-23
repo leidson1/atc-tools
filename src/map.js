@@ -146,6 +146,7 @@ export function showRdlOnMap(result) {
     .bindPopup(
       `<div class="popup-rdl">
         ${result.target_name ? `<span class="detail">${result.target_icao || ''} ${result.target_name}</span>` : ''}
+        ${result.target_info ? `<span class="loc">${result.target_info}</span>` : ''}
         <span class="rdl">${result.aerodrome_icao} RDL ${result.formatted}</span>
         <span class="detail">Mag: ${result.radial_magnetic.toFixed(1)}° | True: ${result.radial_true.toFixed(1)}°</span>
         <span class="detail">${result.distance_nm.toFixed(1)} NM</span>

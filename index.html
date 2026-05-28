@@ -52,13 +52,12 @@
 
         <!-- Tabs -->
         <div class="tabs" role="tablist">
-          <button class="tab active" data-view="radial">Radial</button>
-          <button class="tab" data-view="rota">Rota</button>
+          <button class="tab active" data-view="operacao">Operação</button>
           <button class="tab" data-view="historico">Histórico</button>
         </div>
 
-        <!-- VIEW: RADIAL -->
-        <div class="tab-view active" id="view-radial">
+        <!-- VIEW: OPERACAO -->
+        <div class="tab-view active" id="view-operacao">
           <div class="base-chip">
             <div class="base-chip-head">
               <span class="base-chip-icao" id="base-icao">--</span>
@@ -75,13 +74,34 @@
             </div>
           </div>
 
-          <div class="field">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <input type="text" id="target-input" placeholder="AD, fixo ou coordenada" maxlength="40" autocomplete="off" />
-            <button id="btn-calculate" class="field-btn">BUSCAR</button>
+          <div class="operation-strip">
+            <span id="operation-mode-pill" class="operation-mode-pill">RDL</span>
+            <span id="operation-mode-text" class="operation-mode-text">Origem na base: cálculo radial</span>
           </div>
-          <div id="target-search-results" class="search-results hidden"></div>
-          <div class="hint">Ex.: <b>SDNC</b> · <b>UXAM</b> · <b>2254S04310W</b> · <b>-22.9, -43.17</b></div>
+
+          <div class="route-stack">
+            <label class="route-field-label" for="traj-from">Origem</label>
+            <div class="field route-field">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z"/></svg>
+              <input type="text" id="traj-from" placeholder="Origem: AD, fixo ou coord" maxlength="40" autocomplete="off" />
+            </div>
+
+            <button id="btn-traj-swap" class="swap-btn" title="Inverter origem/destino" aria-label="Inverter origem e destino">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l-3 3 3 3"/><path d="M4 13h16"/><path d="M17 14l3-3-3-3"/><path d="M20 11H4"/></svg>
+            </button>
+
+            <label class="route-field-label" for="traj-to">Destino</label>
+            <div class="field route-field">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z"/></svg>
+              <input type="text" id="traj-to" placeholder="Destino: AD, fixo ou coord" maxlength="40" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="rota-actions">
+            <button id="btn-trajectory" class="btn-primary btn-full">CALCULAR</button>
+            <button id="btn-trajectory-clear" class="chip-btn" title="Limpar">limpar</button>
+          </div>
+          <div class="hint">Base como origem gera RDL/DME. Outra origem gera rota com FIR/TMA.</div>
 
           <div id="rdl-result" class="result-card hidden">
             <div class="result-head">
@@ -102,27 +122,6 @@
               <span>FIR <strong id="rdl-fir">--</strong></span>
             </div>
           </div>
-        </div>
-
-        <!-- VIEW: ROTA -->
-        <div class="tab-view" id="view-rota">
-          <div class="field">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z"/></svg>
-            <input type="text" id="traj-from" placeholder="Origem: AD, fixo ou coord" maxlength="40" autocomplete="off" />
-          </div>
-          <button id="btn-traj-swap" class="swap-btn" title="Inverter origem/destino">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l-3 3 3 3"/><path d="M4 13h16"/><path d="M17 14l3-3-3-3"/><path d="M20 11H4"/></svg>
-            inverter
-          </button>
-          <div class="field">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z"/></svg>
-            <input type="text" id="traj-to" placeholder="Destino: AD, fixo ou coord" maxlength="40" autocomplete="off" />
-          </div>
-          <div class="rota-actions">
-            <button id="btn-trajectory" class="btn-primary btn-full">TRAÇAR</button>
-            <button id="btn-trajectory-clear" class="chip-btn" title="Limpar trajetória">limpar</button>
-          </div>
-
           <div class="flight-params">
             <div class="fp-grid">
               <label class="fp-field">

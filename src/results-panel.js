@@ -1,7 +1,11 @@
 const MAX_HISTORY = 50;
 let history = [];
+let currentResult = null;
 
-export function displayResult(result) {
+export function displayResult(result, options = {}) {
+  const { saveHistory = true } = options;
+  currentResult = result;
+
   const resultSection = document.getElementById('rdl-result');
   resultSection.classList.remove('hidden');
 
@@ -11,7 +15,7 @@ export function displayResult(result) {
   document.getElementById('rdl-dist').textContent = `${result.distance_nm.toFixed(1)} NM`;
   document.getElementById('rdl-decl').textContent = `${result.magnetic_declination.toFixed(1)}°`;
 
-  addToHistory(result);
+  if (saveHistory) addToHistory(result);
 }
 
 function addToHistory(result) {
@@ -73,8 +77,8 @@ export function initCopyButton() {
   const btn = document.getElementById('btn-copy-rdl');
   btn.addEventListener('click', () => {
     const value = document.getElementById('rdl-value').textContent;
-    const target = history.length > 0 ? (history[0].target_icao || '') : '';
-    const base = history.length > 0 ? history[0].aerodrome_icao : '';
+    const target = currentResult?.target_icao || '';
+    const base = currentResult?.aerodrome_icao || '';
     const text = `${target} RDL ${base} ${value}`;
 
     navigator.clipboard.writeText(text).then(() => {

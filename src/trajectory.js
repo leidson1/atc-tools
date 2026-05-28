@@ -1,11 +1,12 @@
-import { lookupPoint } from './api.js';
+import { calculateRdl, lookupPoint } from './api.js';
 import { distanceNm } from './lib/haversine.js';
 import { trueBearing, normalizeBearing } from './lib/bearing.js';
 import { magneticDeclination } from './lib/magnetic.js';
 import { greatCirclePoints, tmaEntriesAlong } from './lib/geo-trajectory.js';
-import { firSequenceAlong, getFirInfo } from './fir-data.js';
-import { showTrajectory, clearTrajectory } from './map.js';
-import { showToast } from './results-panel.js';
+import { firSequenceAlong, getFirForPoint, getFirInfo } from './fir-data.js';
+import { showRdlOnMap, clearRdlVisuals, showTrajectory, clearTrajectory } from './map.js';
+import { displayResult, showToast } from './results-panel.js';
+import { closeDrawerIfMobile } from './drawer.js';
 import tmaGeoJSON from './tma-boundaries.json';
 import {
   PROFILES, headwindComponent, timeToDistanceMin, parseHHMM, formatHHMM, parseWind,
@@ -17,26 +18,45 @@ let lastEvents = [];   // ingressos à frente: [{kind, id, name, distNm, feature
 let lastOrigin = null; // { id, name } da FIR de origem
 let lastDest = null;   // { distNm, id, name, type }
 let lastTrack = 0;
+let operationBase = null;
+let currentOperationMode = null;
+
+export function setOperationBase(info) {
+  const previousBase = operationBase?.icao_code;
+  operationBase = info;
+
+  const from = document.getElementById('traj-from');
+  if (from) {
+    const current = from.value.trim().toUpperCase();
+    if (!current || current === previousBase) {
+      from.value = info.icao_code;
+    }
+  }
+
+  updateOperationMode();
+}
 
 export function initTrajectory() {
-  document.getElementById('btn-trajectory')?.addEventListener('click', onTrace);
+  document.getElementById('btn-trajectory')?.addEventListener('click', runOperation);
   document.getElementById('btn-trajectory-clear')?.addEventListener('click', () => {
-    clearTrajectory();
-    lastEvents = []; lastDest = null; lastOrigin = null;
-    document.getElementById('traj-result')?.classList.add('hidden');
+    clearOperationResults();
   });
   document.getElementById('btn-traj-swap')?.addEventListener('click', () => {
     const a = document.getElementById('traj-from');
     const b = document.getElementById('traj-to');
     [a.value, b.value] = [b.value, a.value];
+    updateOperationMode();
   });
 
   for (const id of ['traj-from', 'traj-to']) {
     const el = document.getElementById(id);
     el?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); onTrace(); }
+      if (e.key === 'Enter') { e.preventDefault(); runOperation(); }
     });
-    el?.addEventListener('input', () => { el.value = el.value.toUpperCase(); });
+    el?.addEventListener('input', () => {
+      el.value = el.value.toUpperCase();
+      updateOperationMode();
+    });
   }
 
   // Parâmetros de voo: recalculam a linha do tempo ao vivo (sem re-traçar)
@@ -51,59 +71,186 @@ export function initTrajectory() {
     el?.addEventListener('input', renderTimeline);
     el?.addEventListener('change', renderTimeline);
   }
+  updateOperationMode();
 }
 
-async function onTrace() {
-  const fromRaw = document.getElementById('traj-from').value.trim();
-  const toRaw = document.getElementById('traj-to').value.trim();
+export function setOperationToRadialMode() {
+  const from = document.getElementById('traj-from');
+  if (from && operationBase) from.value = operationBase.icao_code;
+  updateOperationMode();
+}
+
+export async function runOperation() {
+  const fromEl = document.getElementById('traj-from');
+  const toEl = document.getElementById('traj-to');
+  const fromRaw = fromEl?.value.trim().toUpperCase() || '';
+  const toRaw = toEl?.value.trim().toUpperCase() || '';
+
   if (!fromRaw || !toRaw) {
     showToast('Informe origem e destino', 'warning');
+    (fromRaw ? toEl : fromEl)?.focus();
     return;
   }
 
   const btn = document.getElementById('btn-trajectory');
-  const original = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Traçando...';
+  const original = btn?.textContent || '';
+  const radialMode = isBaseOrigin(fromRaw);
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = radialMode ? 'Calculando...' : 'Traçando...';
+  }
 
   try {
-    const a = await lookupPoint(fromRaw);
-    const b = await lookupPoint(toRaw);
-
-    const traj = greatCirclePoints(a.lat, a.lon, b.lat, b.lon, 160);
-    const dist = distanceNm(a.lat, a.lon, b.lat, b.lon);
-    const tb = trueBearing(a.lat, a.lon, b.lat, b.lon);
-    const mb = normalizeBearing(tb - magneticDeclination(a.lat, a.lon));
-    lastTrack = tb;
-
-    const firsRaw = firSequenceAlong(traj);
-    const tmasRaw = tmaEntriesAlong(traj, tmaGeoJSON);
-
-    const firEvents = firsRaw
-      .filter((f) => f.distNm >= ORIGIN_NM)
-      .map((f) => ({ kind: 'FIR', id: f.id, name: getFirInfo(f.id).label, distNm: f.distNm }));
-    const tmaEvents = tmasRaw
-      .filter((t) => t.distNm >= ORIGIN_NM)
-      .map((t) => ({ kind: 'TMA', id: t.id, name: t.name, distNm: t.distNm, feature: t.feature }));
-
-    lastEvents = [...firEvents, ...tmaEvents].sort((x, y) => x.distNm - y.distNm);
-    lastOrigin = { id: firsRaw[0].id, name: getFirInfo(firsRaw[0].id).label };
-    lastDest = { distNm: dist, id: b.identifier, name: b.name, type: b.point_type };
-
-    showTrajectory(a, b, traj, tmasRaw);
-    renderResult(a, b, dist, mb, tb);
-    renderTimeline();
-
-    showToast(
-      lastEvents.length ? `Cruza ${lastEvents.length} FIR/TMA até o destino` : 'Sem cruzamentos até o destino',
-      'success'
-    );
+    if (radialMode) {
+      await runRadial(toRaw);
+    } else {
+      await runRoute(fromRaw, toRaw);
+    }
+    closeDrawerIfMobile();
   } catch (err) {
     showToast(`Erro: ${err.message || err}`, 'error');
   } finally {
-    btn.disabled = false;
-    btn.textContent = original;
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+    updateOperationMode();
   }
+}
+
+async function runRoute(fromRaw, toRaw) {
+  const a = await lookupPoint(fromRaw);
+  const b = await lookupPoint(toRaw);
+
+  const traj = greatCirclePoints(a.lat, a.lon, b.lat, b.lon, 160);
+  const dist = distanceNm(a.lat, a.lon, b.lat, b.lon);
+  const tb = trueBearing(a.lat, a.lon, b.lat, b.lon);
+  const mb = normalizeBearing(tb - magneticDeclination(a.lat, a.lon));
+  lastTrack = tb;
+
+  const firsRaw = firSequenceAlong(traj);
+  const tmasRaw = tmaEntriesAlong(traj, tmaGeoJSON);
+
+  const firEvents = firsRaw
+    .filter((f) => f.distNm >= ORIGIN_NM)
+    .map((f) => ({ kind: 'FIR', id: f.id, name: getFirInfo(f.id).label, distNm: f.distNm }));
+  const tmaEvents = tmasRaw
+    .filter((t) => t.distNm >= ORIGIN_NM)
+    .map((t) => ({ kind: 'TMA', id: t.id, name: t.name, distNm: t.distNm, feature: t.feature }));
+
+  lastEvents = [...firEvents, ...tmaEvents].sort((x, y) => x.distNm - y.distNm);
+  const originFir = firsRaw[0]?.id || getFirForPoint(a.lat, a.lon);
+  lastOrigin = { id: originFir, name: getFirInfo(originFir).label };
+  lastDest = { distNm: dist, id: b.identifier, name: b.name, type: b.point_type };
+
+  clearRdlResult();
+  clearRdlVisuals();
+  showTrajectory(a, b, traj, tmasRaw);
+  renderResult(a, b, dist, mb, tb);
+  renderTimeline();
+
+  showToast(
+    lastEvents.length ? `Cruza ${lastEvents.length} FIR/TMA até o destino` : 'Sem cruzamentos até o destino',
+    'success'
+  );
+}
+
+async function runRadial(toRaw) {
+  if (!operationBase) {
+    throw new Error('Aeródromo base não carregado');
+  }
+
+  const point = await lookupPoint(toRaw);
+  const result = await calculateRdl(operationBase.icao_code, point.lat, point.lon);
+
+  result.target_name = point.name;
+  result.target_icao = point.identifier;
+  result.target_type = point.point_type;
+  result.target_info = point.info;
+
+  const targetFir = getFirForPoint(point.lat, point.lon);
+  const firInfo = getFirInfo(targetFir);
+  result.target_fir = targetFir;
+  result.target_fir_label = firInfo.label;
+
+  clearTrajectoryState();
+  displayResult(result);
+  showRdlOnMap(result);
+  updateRdlTarget(point, targetFir, firInfo);
+
+  if (point.point_type === 'COORD') {
+    const note = point.coord.assumed ? ' — assumi S/W, confira!' : '';
+    showToast(
+      `Coordenada ${point.name}${note} → RDL ${result.formatted} de ${operationBase.icao_code}`,
+      point.coord.assumed ? 'warning' : 'success'
+    );
+  } else {
+    showToast(`${toRaw}: RDL ${result.formatted} | FIR ${targetFir}`, 'success');
+  }
+}
+
+function isBaseOrigin(origin) {
+  return !!operationBase && origin.trim().toUpperCase() === operationBase.icao_code;
+}
+
+function updateOperationMode() {
+  const from = document.getElementById('traj-from')?.value.trim().toUpperCase() || '';
+  const radialMode = isBaseOrigin(from);
+  const nextMode = radialMode ? 'rdl' : 'route';
+  const pill = document.getElementById('operation-mode-pill');
+  const text = document.getElementById('operation-mode-text');
+  const params = document.querySelector('.flight-params');
+  const btn = document.getElementById('btn-trajectory');
+
+  if (currentOperationMode && currentOperationMode !== nextMode) {
+    clearOperationResults();
+  }
+  currentOperationMode = nextMode;
+
+  if (pill) {
+    pill.textContent = radialMode ? 'RDL' : 'ROTA';
+    pill.classList.toggle('route', !radialMode);
+  }
+  if (text) {
+    text.textContent = radialMode
+      ? 'Origem na base: cálculo radial'
+      : 'Origem fora da base: rota e cruzamentos';
+  }
+  params?.classList.toggle('hidden', radialMode);
+  if (btn && !btn.disabled) btn.textContent = radialMode ? 'CALCULAR RDL' : 'TRAÇAR ROTA';
+}
+
+function updateRdlTarget(point, targetFir, firInfo) {
+  const typeLabel = point.point_type === 'AD' ? '' : `[${point.point_type}] `;
+  const nameEl = document.getElementById('rdl-target-name');
+  if (nameEl) {
+    nameEl.textContent =
+      `${typeLabel}${point.identifier} - ${point.name} ${point.info ? '(' + point.info + ')' : ''}`;
+  }
+
+  const firEl = document.getElementById('rdl-fir');
+  if (firEl) {
+    firEl.textContent = `${targetFir} (${firInfo.label})`;
+    firEl.style.color = firInfo.color;
+  }
+}
+
+function clearOperationResults() {
+  clearTrajectoryState();
+  clearRdlResult();
+  clearRdlVisuals();
+}
+
+function clearTrajectoryState() {
+  clearTrajectory();
+  lastEvents = [];
+  lastDest = null;
+  lastOrigin = null;
+  document.getElementById('traj-result')?.classList.add('hidden');
+}
+
+function clearRdlResult() {
+  document.getElementById('rdl-result')?.classList.add('hidden');
 }
 
 function altToFt(s) {

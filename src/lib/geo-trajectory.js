@@ -140,6 +140,8 @@ export function tmaEntriesAlong(traj, tmaGeoJSON) {
         name: feature.properties.name || '',
         feature,
         distNm: cum[entryIdx],
+        lat: traj[entryIdx].lat,
+        lon: traj[entryIdx].lon,
       });
     }
   }

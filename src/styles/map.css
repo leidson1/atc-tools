@@ -111,6 +111,23 @@
   transform-origin: 50% 50%;
 }
 
+.tma-entry-dot {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #9b5de5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+  position: relative;
+}
+.tma-entry-dot::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.42);
+}
+
 /* === Aerodrome Marker === */
 .aerodrome-marker {
   display: flex;

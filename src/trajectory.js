@@ -134,13 +134,21 @@ async function runRoute(fromRaw, toRaw) {
 
   const firsRaw = firSequenceAlong(traj);
   const tmasRaw = tmaEntriesAlong(traj, tmaGeoJSON);
+  const routeTmas = tmasRaw.filter((t) => t.distNm >= ORIGIN_NM);
+  const tmaEntryLabels = await buildTmaEntryLabels(routeTmas, mb);
 
   const firEvents = firsRaw
     .filter((f) => f.distNm >= ORIGIN_NM)
     .map((f) => ({ kind: 'FIR', id: f.id, name: getFirInfo(f.id).label, distNm: f.distNm }));
-  const tmaEvents = tmasRaw
-    .filter((t) => t.distNm >= ORIGIN_NM)
-    .map((t) => ({ kind: 'TMA', id: t.id, name: t.name, distNm: t.distNm, feature: t.feature }));
+  const tmaEvents = routeTmas
+    .map((t) => ({
+      kind: 'TMA',
+      id: t.id,
+      name: t.name,
+      distNm: t.distNm,
+      feature: t.feature,
+      entryRdl: tmaEntryLabels.find((entry) => entry.id === t.id),
+    }));
 
   lastEvents = [...firEvents, ...tmaEvents].sort((x, y) => x.distNm - y.distNm);
   const originFir = firsRaw[0]?.id || getFirForPoint(a.lat, a.lon);
@@ -149,7 +157,13 @@ async function runRoute(fromRaw, toRaw) {
 
   clearRdlResult();
   clearRdlVisuals();
-  showTrajectory(a, b, traj, tmasRaw, { magBearing: mb, trueBearing: tb, distanceNm: dist });
+  showTrajectory(a, b, traj, tmasRaw, {
+    magBearing: mb,
+    trueBearing: tb,
+    distanceNm: dist,
+    baseIcao: operationBase?.icao_code,
+    tmaEntries: tmaEntryLabels,
+  });
   renderResult(a, b, dist, mb, tb);
   renderTimeline();
 
@@ -191,6 +205,28 @@ async function runRadial(toRaw) {
   } else {
     showToast(`${toRaw}: RDL ${result.formatted} | FIR ${targetFir}`, 'success');
   }
+}
+
+async function buildTmaEntryLabels(tmas, headingMag) {
+  if (!operationBase) return [];
+
+  return Promise.all(
+    tmas.map(async (tma) => {
+      const rdl = await calculateRdl(operationBase.icao_code, tma.lat, tma.lon);
+      return {
+        id: tma.id,
+        name: tma.name,
+        lat: tma.lat,
+        lon: tma.lon,
+        distNm: tma.distNm,
+        baseIcao: operationBase.icao_code,
+        headingMag,
+        rdl: rdl.formatted,
+        radialMagnetic: rdl.radial_magnetic,
+        distanceNmFromBase: rdl.distance_nm,
+      };
+    })
+  );
 }
 
 function isBaseOrigin(origin) {
@@ -295,7 +331,7 @@ function renderResult(a, b, dist, mb, tb) {
           <span class="traj-kicker">Destino</span>
           <span class="traj-dest">${ptLabel(b)}</span>
         </div>
-        <span class="route-proa-pill">PROA ${pad3(mb)}°</span>
+        <span class="route-proa-pill">HDG ${pad3(mb)}°</span>
       </div>
       <div class="traj-route-line">
         <span>${a.identifier}</span>
@@ -375,6 +411,7 @@ function renderTimeline() {
       const lower = ev.feature?.properties?.lower || '';
       const upper = ev.feature?.properties?.upper || '';
       if (lower || upper) sub += ` · ${lower || '?'}–${upper || '?'}`;
+      if (ev.entryRdl) sub += ` · RDL ${ev.entryRdl.baseIcao} ${ev.entryRdl.rdl}`;
       if (lo != null && hi != null) {
         const inside = acFt >= lo && acFt <= hi;
         badge = `<span class="tl-badge ${inside ? 'in' : 'out'}">${inside ? 'DENTRO' : 'fora'}</span>`;

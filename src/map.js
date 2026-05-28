@@ -29,6 +29,13 @@ const pointIcon = L.divIcon({
   iconAnchor: [7, 7],
 });
 
+const tmaEntryIcon = L.divIcon({
+  className: '',
+  html: '<div class="tma-entry-dot"></div>',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
 export function initMap(containerId, onClick) {
   onMapClick = onClick;
 
@@ -204,8 +211,21 @@ function routePopupHtml(dest, details) {
   return `<div class="popup-rdl popup-route">
     <span class="detail">${escapeHtml(dest.identifier || '')}${destName}</span>
     ${destInfo}
-    <span class="rdl">PROA ${mag}°</span>
+    <span class="rdl">HDG ${mag}°</span>
     <span class="detail">True: ${tru}° | ${dist}</span>
+  </div>`;
+}
+
+function tmaEntryPopupHtml(entry) {
+  const name = entry.name || entry.id || 'TMA';
+  const heading = Number.isFinite(entry.headingMag) ? pad3(entry.headingMag) : '---';
+  const routeDist = Number.isFinite(entry.distNm) ? `@ ${entry.distNm.toFixed(0)} NM na rota` : '';
+
+  return `<div class="popup-rdl">
+    <span class="detail">INGRESSO ${escapeHtml(entry.id || 'TMA')}</span>
+    <span class="loc">${escapeHtml(name)}</span>
+    <span class="rdl">${escapeHtml(entry.baseIcao || '')} RDL ${escapeHtml(entry.rdl || '---/--.-')}</span>
+    <span class="detail">HDG ${heading}°${routeDist ? ` | ${routeDist}` : ''}</span>
   </div>`;
 }
 
@@ -218,7 +238,7 @@ function routeArrowIcon(details) {
     className: 'route-arrow-marker',
     html: `<div class="route-arrow-pill">
       <span class="route-arrow-head" style="transform:rotate(${rotation}deg)"></span>
-      <b>PROA ${mag}</b>
+      <b>HDG ${mag}</b>
     </div>`,
     iconSize: [92, 26],
     iconAnchor: [46, 13],
@@ -272,10 +292,23 @@ export function showTrajectory(a, b, traj, crossed, details = {}) {
       .addTo(map)
       .bindTooltip(label, { direction: 'top', className: 'distance-label', offset: [0, -10] });
 
+  let openedTmaEntry = false;
+  for (const entry of details.tmaEntries || []) {
+    if (!Number.isFinite(entry.lat) || !Number.isFinite(entry.lon)) continue;
+    const marker = L.marker([entry.lat, entry.lon], { icon: tmaEntryIcon })
+      .addTo(map)
+      .bindPopup(tmaEntryPopupHtml(entry), { className: 'dark-popup' });
+    if (!openedTmaEntry) {
+      marker.openPopup();
+      openedTmaEntry = true;
+    }
+    trajectoryLayers.push(marker);
+  }
+
   const originMarker = mk(a, a.identifier || 'A');
   const destMarker = mk(b, b.identifier || 'B')
-    .bindPopup(routePopupHtml(b, details), { className: 'dark-popup' })
-    .openPopup();
+    .bindPopup(routePopupHtml(b, details), { className: 'dark-popup' });
+  if (!openedTmaEntry) destMarker.openPopup();
   trajectoryLayers.push(originMarker, destMarker);
 
   map.fitBounds(L.latLngBounds(latlngs), { padding: [60, 60], maxZoom: 10 });

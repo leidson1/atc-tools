@@ -84,11 +84,13 @@
             <div class="field route-field">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z"/></svg>
               <input type="text" id="traj-from" placeholder="Origem: AD, fixo ou coord" maxlength="40" autocomplete="off" />
+              <button type="button" id="btn-origin-base" class="field-icon-btn" title="Voltar origem para a base" aria-label="Voltar origem para a base">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+              </button>
+              <button type="button" id="btn-traj-swap" class="field-icon-btn" title="Inverter origem/destino" aria-label="Inverter origem e destino">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l-3 3 3 3"/><path d="M4 13h16"/><path d="M17 14l3-3-3-3"/><path d="M20 11H4"/></svg>
+              </button>
             </div>
-
-            <button id="btn-traj-swap" class="swap-btn" title="Inverter origem/destino" aria-label="Inverter origem e destino">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l-3 3 3 3"/><path d="M4 13h16"/><path d="M17 14l3-3-3-3"/><path d="M20 11H4"/></svg>
-            </button>
 
             <label class="route-field-label" for="traj-to">Destino</label>
             <div class="field route-field">
@@ -122,22 +124,28 @@
               <span>FIR <strong id="rdl-fir">--</strong></span>
             </div>
           </div>
-          <div class="flight-params">
-            <div class="fp-grid">
-              <label class="fp-field">
-                <span>Perfil</span>
-                <select id="fp-profile">
-                  <option value="jato">Jato</option>
-                  <option value="turbo">Turboélice</option>
-                  <option value="leve">Leve / Pistão</option>
-                </select>
-              </label>
-              <label class="fp-field"><span>TAS (kt)</span><input id="fp-tas" inputmode="numeric" value="460" autocomplete="off" /></label>
-              <label class="fp-field"><span>Nível (FL)</span><input id="fp-fl" inputmode="numeric" value="350" autocomplete="off" /></label>
-              <label class="fp-field"><span>Decolagem (Z)</span><input id="fp-dep" placeholder="--:--" autocomplete="off" /></label>
-              <label class="fp-field fp-wide"><span>Vento (opcional)</span><input id="fp-wind" placeholder="ex: 270/40" autocomplete="off" /></label>
+          <details id="flight-params-accordion" class="panel-accordion flight-params-accordion">
+            <summary>
+              <span>Parâmetros de voo</span>
+              <small>perfil, TAS, nível e vento</small>
+            </summary>
+            <div class="flight-params">
+              <div class="fp-grid">
+                <label class="fp-field">
+                  <span>Perfil</span>
+                  <select id="fp-profile">
+                    <option value="jato">Jato</option>
+                    <option value="turbo">Turboélice</option>
+                    <option value="leve">Leve / Pistão</option>
+                  </select>
+                </label>
+                <label class="fp-field"><span>TAS (kt)</span><input id="fp-tas" inputmode="numeric" value="460" autocomplete="off" /></label>
+                <label class="fp-field"><span>Nível (FL)</span><input id="fp-fl" inputmode="numeric" value="350" autocomplete="off" /></label>
+                <label class="fp-field"><span>Decolagem (Z)</span><input id="fp-dep" placeholder="--:--" autocomplete="off" /></label>
+                <label class="fp-field fp-wide"><span>Vento (opcional)</span><input id="fp-wind" placeholder="ex: 270/40" autocomplete="off" /></label>
+              </div>
             </div>
-          </div>
+          </details>
 
           <div id="traj-result" class="hidden"></div>
         </div>

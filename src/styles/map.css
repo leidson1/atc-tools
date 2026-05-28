@@ -78,6 +78,39 @@
   margin-bottom: 6px;
 }
 
+.popup-route .rdl {
+  color: #0a7d2c;
+}
+
+/* === Route arrow === */
+.route-arrow-marker {
+  background: transparent !important;
+  border: none !important;
+}
+.route-arrow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(10, 125, 44, 0.35);
+  border-radius: 999px;
+  padding: 4px 8px 4px 6px;
+  color: #0a7d2c;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+  white-space: nowrap;
+}
+.route-arrow-head {
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 9px solid #0a7d2c;
+  transform-origin: 50% 50%;
+}
+
 /* === Aerodrome Marker === */
 .aerodrome-marker {
   display: flex;

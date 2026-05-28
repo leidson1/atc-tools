@@ -183,7 +183,49 @@ const trajIcon = L.divIcon({
   iconAnchor: [6.5, 6.5],
 });
 
-export function showTrajectory(a, b, traj, crossed) {
+const pad3 = (v) => String(Math.round(v)).padStart(3, '0');
+
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function routePopupHtml(dest, details) {
+  const mag = Number.isFinite(details.magBearing) ? pad3(details.magBearing) : '---';
+  const tru = Number.isFinite(details.trueBearing) ? pad3(details.trueBearing) : '---';
+  const dist = Number.isFinite(details.distanceNm) ? `${details.distanceNm.toFixed(0)} NM` : '-- NM';
+  const destName = dest.name && dest.name !== dest.identifier ? ` ${escapeHtml(dest.name)}` : '';
+  const destInfo = dest.info ? `<span class="loc">${escapeHtml(dest.info)}</span>` : '';
+
+  return `<div class="popup-rdl popup-route">
+    <span class="detail">${escapeHtml(dest.identifier || '')}${destName}</span>
+    ${destInfo}
+    <span class="rdl">PROA ${mag}°</span>
+    <span class="detail">True: ${tru}° | ${dist}</span>
+  </div>`;
+}
+
+function routeArrowIcon(details) {
+  const mag = Number.isFinite(details.magBearing) ? pad3(details.magBearing) : '---';
+  const trueBearing = Number.isFinite(details.trueBearing) ? details.trueBearing : details.magBearing || 90;
+  const rotation = trueBearing - 90;
+
+  return L.divIcon({
+    className: 'route-arrow-marker',
+    html: `<div class="route-arrow-pill">
+      <span class="route-arrow-head" style="transform:rotate(${rotation}deg)"></span>
+      <b>PROA ${mag}</b>
+    </div>`,
+    iconSize: [92, 26],
+    iconAnchor: [46, 13],
+  });
+}
+
+export function showTrajectory(a, b, traj, crossed, details = {}) {
   if (!map) return;
   clearTrajectory();
 
@@ -215,11 +257,26 @@ export function showTrajectory(a, b, traj, crossed) {
   }).addTo(map);
   trajectoryLayers.push(line);
 
+  const midpoint = latlngs[Math.floor(latlngs.length / 2)];
+  if (midpoint) {
+    const arrow = L.marker(midpoint, {
+      icon: routeArrowIcon(details),
+      interactive: false,
+      keyboard: false,
+    }).addTo(map);
+    trajectoryLayers.push(arrow);
+  }
+
   const mk = (pt, label) =>
     L.marker([pt.lat, pt.lon], { icon: trajIcon })
       .addTo(map)
       .bindTooltip(label, { direction: 'top', className: 'distance-label', offset: [0, -10] });
-  trajectoryLayers.push(mk(a, a.identifier || 'A'), mk(b, b.identifier || 'B'));
+
+  const originMarker = mk(a, a.identifier || 'A');
+  const destMarker = mk(b, b.identifier || 'B')
+    .bindPopup(routePopupHtml(b, details), { className: 'dark-popup' })
+    .openPopup();
+  trajectoryLayers.push(originMarker, destMarker);
 
   map.fitBounds(L.latLngBounds(latlngs), { padding: [60, 60], maxZoom: 10 });
 }

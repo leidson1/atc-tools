@@ -66,6 +66,25 @@
 }
 .field input:focus { box-shadow: none; }
 .field input::placeholder { color: var(--text-muted); letter-spacing: .2px; text-transform: none; }
+.field-icon-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition);
+}
+.field-icon-btn:hover {
+  background: var(--accent-light);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  color: var(--accent);
+}
 .field-btn {
   background: var(--accent); color: var(--on-accent); border: none;
   padding: 9px 15px; border-radius: 8px; font-weight: 700; font-size: 12px;
@@ -129,6 +148,51 @@
   min-height: 43px;
 }
 
+/* === Compact accordions === */
+.panel-accordion {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  overflow: hidden;
+}
+.panel-accordion > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.panel-accordion > summary::-webkit-details-marker { display: none; }
+.panel-accordion > summary::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(45deg);
+  transition: transform var(--transition);
+  flex-shrink: 0;
+}
+.panel-accordion[open] > summary::after { transform: rotate(225deg); }
+.panel-accordion > summary small {
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* === Search results === */
 .search-results {
   background: var(--bg-secondary); border: 1px solid var(--border);
@@ -182,6 +246,60 @@
 .result-foot strong { color: var(--text-secondary); font-family: var(--font-mono); font-weight: 700; }
 
 /* === Trajectory result === */
+.traj-route-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 9px; }
+.traj-route-title { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.traj-kicker {
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.traj-dest {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+.route-proa-pill {
+  background: color-mix(in srgb, var(--success) 12%, var(--bg-secondary));
+  border: 1px solid color-mix(in srgb, var(--success) 36%, var(--border));
+  color: var(--success);
+  border-radius: 8px;
+  padding: 5px 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.traj-route-line {
+  display: grid;
+  grid-template-columns: max-content 1fr max-content;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.traj-route-line i {
+  display: block;
+  height: 1px;
+  position: relative;
+  background: color-mix(in srgb, var(--success) 45%, var(--border));
+}
+.traj-route-line i::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid var(--success);
+  border-right: 2px solid var(--success);
+  transform: translateY(-50%) rotate(45deg);
+}
+.traj-route-line b { color: var(--success); }
 .traj-route { font-size: 11px; color: var(--text-secondary); font-family: var(--font-mono); line-height: 1.6; margin-bottom: 10px; }
 .traj-route .traj-arrow { color: var(--accent); font-weight: 700; }
 .tma-block { margin-top: 12px; }
@@ -204,7 +322,7 @@
 .level-hint { font-size: 10px; color: var(--text-muted); margin-top: 8px; }
 
 /* === Flight params (Rota tab) === */
-.flight-params { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 11px; }
+.flight-params { background: transparent; border: none; border-top: 1px solid var(--border); border-radius: 0; padding: 11px; }
 .fp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .fp-field { display: flex; flex-direction: column; gap: 4px; }
 .fp-field.fp-wide { grid-column: 1 / -1; }
@@ -216,6 +334,7 @@
 .fp-field input:focus, .fp-field select:focus { outline: none; border-color: var(--border-focus); box-shadow: var(--glow); }
 
 /* === Timeline (FIR/TMA ingress) === */
+.timeline-accordion { background: var(--bg-secondary); }
 .tl-head { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-secondary); font-weight: 700; margin-top: 2px; }
 .tl-item { display: flex; align-items: center; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--border); }
 .tl-item:last-child { border-bottom: none; }

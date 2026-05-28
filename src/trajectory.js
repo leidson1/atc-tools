@@ -41,6 +41,10 @@ export function initTrajectory() {
   document.getElementById('btn-trajectory-clear')?.addEventListener('click', () => {
     clearOperationResults();
   });
+  document.getElementById('btn-origin-base')?.addEventListener('click', () => {
+    setOperationToRadialMode();
+    document.getElementById('traj-to')?.focus();
+  });
   document.getElementById('btn-traj-swap')?.addEventListener('click', () => {
     const a = document.getElementById('traj-from');
     const b = document.getElementById('traj-to');
@@ -145,7 +149,7 @@ async function runRoute(fromRaw, toRaw) {
 
   clearRdlResult();
   clearRdlVisuals();
-  showTrajectory(a, b, traj, tmasRaw);
+  showTrajectory(a, b, traj, tmasRaw, { magBearing: mb, trueBearing: tb, distanceNm: dist });
   renderResult(a, b, dist, mb, tb);
   renderTimeline();
 
@@ -199,7 +203,7 @@ function updateOperationMode() {
   const nextMode = radialMode ? 'rdl' : 'route';
   const pill = document.getElementById('operation-mode-pill');
   const text = document.getElementById('operation-mode-text');
-  const params = document.querySelector('.flight-params');
+  const params = document.getElementById('flight-params-accordion');
   const btn = document.getElementById('btn-trajectory');
 
   if (currentOperationMode && currentOperationMode !== nextMode) {
@@ -286,20 +290,41 @@ function renderResult(a, b, dist, mb, tb) {
   const el = document.getElementById('traj-result');
   el.innerHTML = `
     <div class="result-card">
-      <div class="traj-route">
-        <span class="traj-arrow">▸</span> ${ptLabel(a)}<br>
-        <span class="traj-arrow">▸</span> ${ptLabel(b)}
+      <div class="traj-route-head">
+        <div class="traj-route-title">
+          <span class="traj-kicker">Destino</span>
+          <span class="traj-dest">${ptLabel(b)}</span>
+        </div>
+        <span class="route-proa-pill">PROA ${pad3(mb)}°</span>
+      </div>
+      <div class="traj-route-line">
+        <span>${a.identifier}</span>
+        <i></i>
+        <b>${b.identifier}</b>
       </div>
       <div class="instruments">
         <div class="inst"><div class="inst-lbl">Dist</div><div class="inst-val">${dist.toFixed(0)}<span style="font-size:11px"> NM</span></div></div>
         <div class="inst"><div class="inst-lbl">Mag</div><div class="inst-val">${pad3(mb)}°</div></div>
         <div class="inst"><div class="inst-lbl">True</div><div class="inst-val">${pad3(tb)}°</div></div>
       </div>
-      <div class="tl-head">Linha do tempo</div>
-      <div id="traj-timeline"></div>
-      <div class="level-hint" id="traj-tl-hint"></div>
+      <details class="panel-accordion timeline-accordion">
+        <summary>
+          <span>Linha do tempo</span>
+          <small id="traj-timeline-summary">${timelineSummaryText()}</small>
+        </summary>
+        <div id="traj-timeline"></div>
+        <div class="level-hint" id="traj-tl-hint"></div>
+      </details>
     </div>`;
   el.classList.remove('hidden');
+}
+
+function timelineSummaryText() {
+  if (!lastDest) return 'sem rota';
+  const crossings = lastEvents.length
+    ? `${lastEvents.length} cruzamento${lastEvents.length > 1 ? 's' : ''}`
+    : 'sem cruzamentos';
+  return `${crossings} · ${lastDest.distNm.toFixed(0)} NM`;
 }
 
 function timeCell(distNm, opts, dep) {
@@ -375,6 +400,9 @@ function renderTimeline() {
   </div>`);
 
   tl.innerHTML = rows.join('');
+
+  const summary = document.getElementById('traj-timeline-summary');
+  if (summary) summary.textContent = timelineSummaryText();
 
   const hint = document.getElementById('traj-tl-hint');
   if (hint) {

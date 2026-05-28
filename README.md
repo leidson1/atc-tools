@@ -79,3 +79,5 @@ node scripts/check-data.mjs --fail-on-change
 ```
 
 Quando a fonte oficial divergir da fotografia gravada em `src/data/metadata.json`, o workflow falha para servir como alerta de atualizacao.
+
+O workflow `.github/workflows/update-data.yml` roda logo depois. Quando encontra mudanca oficial, ele executa `npm run data:sync`, valida build web/offline, cria a branch `data/update-official-sources` e abre um PR draft automatico para revisao humana antes da publicacao.

@@ -1,0 +1,119 @@
+name: Update Official Data
+
+on:
+  schedule:
+    - cron: '30 11 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: official-data-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for official data changes
+        id: check
+        shell: bash
+        run: |
+          set +e
+          node scripts/check-data.mjs --fail-on-change
+          status=$?
+          set -e
+
+          if [ "$status" -eq 0 ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Official data is already current."
+          elif [ "$status" -eq 2 ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Official data changed; preparing update PR."
+          else
+            exit "$status"
+          fi
+
+      - name: Sync official data
+        if: steps.check.outputs.changed == 'true'
+        run: npm run data:sync
+
+      - name: Validate synced data
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          node scripts/check-data.mjs --fail-on-change
+          npm run build
+          npm run build:single
+
+      - name: Detect local diff
+        if: steps.check.outputs.changed == 'true'
+        id: diff
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "has_diff=false" >> "$GITHUB_OUTPUT"
+            echo "No file changes after sync."
+          else
+            echo "has_diff=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push update branch
+        if: steps.diff.outputs.has_diff == 'true'
+        id: push
+        shell: bash
+        run: |
+          branch="data/update-official-sources"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add -A
+          git commit -m "Atualiza dados oficiais"
+          git push --force-with-lease origin "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update pull request
+        if: steps.diff.outputs.has_diff == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.push.outputs.branch }}
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+        shell: bash
+        run: |
+          title="Atualiza dados oficiais do GeoAISWEB"
+          body_file="$(mktemp)"
+          cat > "$body_file" <<'EOF'
+          ## O que mudou
+          - Atualiza aerodromos, helipontos, fixos, FIR, TMA e CTR a partir das fontes oficiais DECEA.
+          - Atualiza a fotografia em `src/data/metadata.json` com D-AMDT, vigencia, emendas e metadados do ROTAER.
+
+          ## Como validar
+          - `node scripts/check-data.mjs --fail-on-change`
+          - `npm run build`
+          - `npm run build:single`
+
+          ## Observacao
+          Este PR foi criado automaticamente pelo workflow `Update Official Data`.
+          EOF
+
+          if gh pr view "$BRANCH" --json url --jq .url >/tmp/pr-url.txt 2>/dev/null; then
+            gh pr edit "$BRANCH" --title "$title" --body-file "$body_file" --base "$BASE_BRANCH"
+            echo "Updated existing PR: $(cat /tmp/pr-url.txt)"
+          else
+            gh pr create --draft --base "$BASE_BRANCH" --head "$BRANCH" --title "$title" --body-file "$body_file"
+          fi

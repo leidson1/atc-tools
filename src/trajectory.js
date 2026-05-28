@@ -9,7 +9,8 @@ import { displayResult, showToast } from './results-panel.js';
 import { closeDrawerIfMobile } from './drawer.js';
 import tmaGeoJSON from './tma-boundaries.json';
 import {
-  PROFILES, headwindComponent, timeToDistanceMin, parseHHMM, formatHHMM, parseWind,
+  AIRCRAFT_PROFILES, PROFILES, aircraftDisplayLabel, aircraftHint, findAircraftProfile,
+  headwindComponent, timeToDistanceMin, parseHHMM, formatHHMM, parseWind,
 } from './lib/flight-time.js';
 
 const ORIGIN_NM = 3; // eventos a menos disso são "origem", não ingresso
@@ -20,6 +21,7 @@ let lastDest = null;   // { distNm, id, name, type }
 let lastTrack = 0;
 let operationBase = null;
 let currentOperationMode = null;
+let selectedFlightProfile = PROFILES.jato;
 
 export function setOperationBase(info) {
   const previousBase = operationBase?.icao_code;
@@ -64,18 +66,93 @@ export function initTrajectory() {
   }
 
   // Parâmetros de voo: recalculam a linha do tempo ao vivo (sem re-traçar)
-  const profileSel = document.getElementById('fp-profile');
-  profileSel?.addEventListener('change', () => {
-    const p = PROFILES[profileSel.value];
-    if (p) document.getElementById('fp-tas').value = p.cruiseTAS;
-    renderTimeline();
-  });
+  setupAircraftProfiles();
   for (const id of ['fp-tas', 'fp-fl', 'fp-dep', 'fp-wind']) {
     const el = document.getElementById(id);
     el?.addEventListener('input', renderTimeline);
     el?.addEventListener('change', renderTimeline);
   }
   updateOperationMode();
+}
+
+function setupAircraftProfiles() {
+  const input = document.getElementById('fp-aircraft');
+  const list = document.getElementById('fp-aircraft-list');
+
+  if (list) {
+    const seen = new Set();
+    const options = [];
+    for (const p of AIRCRAFT_PROFILES) {
+      const values = [aircraftDisplayLabel(p), p.icao, ...(p.aliases || [])].filter(Boolean);
+      for (const value of values) {
+        const key = value.toUpperCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        options.push(`<option value="${escapeAttr(value)}" label="${escapeAttr(aircraftDisplayLabel(p))}"></option>`);
+      }
+    }
+    list.innerHTML = options.join('');
+  }
+
+  const applyFromInput = () => applyAircraftProfile(input?.value);
+  input?.addEventListener('change', applyFromInput);
+  input?.addEventListener('blur', applyFromInput);
+  input?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      applyFromInput();
+    }
+  });
+  input?.addEventListener('input', () => {
+    const p = findAircraftProfile(input.value);
+    updateAircraftHint(p, !!input.value);
+    renderTimeline();
+  });
+
+  applyAircraftProfile(input?.value || 'jato');
+}
+
+function applyAircraftProfile(value) {
+  const p = findAircraftProfile(value);
+  if (!p) {
+    updateAircraftHint(null, !!value);
+    renderTimeline();
+    return;
+  }
+
+  selectedFlightProfile = p;
+
+  const input = document.getElementById('fp-aircraft');
+  const tas = document.getElementById('fp-tas');
+  const fl = document.getElementById('fp-fl');
+
+  if (input) input.value = aircraftDisplayLabel(p);
+  if (tas) tas.value = p.cruiseTAS;
+  if (fl && p.defaultFL) fl.value = p.defaultFL;
+  updateAircraftHint(p);
+  renderTimeline();
+}
+
+function currentFlightProfile() {
+  const input = document.getElementById('fp-aircraft');
+  const p = findAircraftProfile(input?.value);
+  return p || selectedFlightProfile || PROFILES.jato;
+}
+
+function updateAircraftHint(profile, hasQuery = true) {
+  const hint = document.getElementById('fp-aircraft-hint');
+  if (!hint) return;
+  hint.textContent = profile
+    ? aircraftHint(profile)
+    : (hasQuery ? 'Sem preset: mantendo o ultimo perfil selecionado.' : '');
+}
+
+function escapeAttr(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 export function setOperationToRadialMode() {
@@ -373,7 +450,7 @@ function renderTimeline() {
   const tl = document.getElementById('traj-timeline');
   if (!tl || !lastDest) return;
 
-  const profile = PROFILES[document.getElementById('fp-profile')?.value] || PROFILES.jato;
+  const profile = currentFlightProfile();
   const tas = parseInt(document.getElementById('fp-tas')?.value, 10) || profile.cruiseTAS;
   const fl = parseInt(document.getElementById('fp-fl')?.value, 10) || 350;
   const dep = parseHHMM(document.getElementById('fp-dep')?.value);

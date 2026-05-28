@@ -13,8 +13,13 @@ for (const ad of rawAerodromes) {
     state: ad.uf,
     arp_lat: ad.lat,
     arp_lon: ad.lon,
-    elevation_ft: 0,
+    elevation_ft: ad.elevation_ft ?? 0,
     magnetic_variation: null,
+    type: ad.type || 'AD',
+    use: ad.use || '',
+    operation: ad.operation || '',
+    fir: ad.fir || '',
+    amendment: ad.amendment || '',
   });
 }
 

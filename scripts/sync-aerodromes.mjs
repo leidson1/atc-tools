@@ -1,115 +1,100 @@
 #!/usr/bin/env node
-// Sync aerodromes from AISWEB (DECEA) ROTAER API into src/data/aerodromes.json
+// Sync aerodromes and heliports from the official DECEA GeoAISWEB WFS layer.
 //
-// Usage:
-//   node scripts/sync-aerodromes.mjs
-//   AISWEB_KEY=... AISWEB_PASS=... node scripts/sync-aerodromes.mjs
-//
-// The defaults below are the same credentials that shipped with the previous
-// Tauri build; override with env vars if you have your own.
+// Source layer: ICA:airport_heliport
+// Output: src/data/aerodromes.json
 
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(__dirname, '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const WFS_BASE = 'https://geoaisweb.decea.mil.br/geoserver/ICA/wfs';
+const LAYER = 'ICA:airport_heliport';
 
-const API_KEY = process.env.AISWEB_KEY || '1131205333';
-const API_PASS = process.env.AISWEB_PASS || '426320c8-30a9-11f0-a1fe-0050569ac2e1';
-const BASE = 'https://aisweb.decea.mil.br/api/';
-
-const UFS = [
-  'AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
-  'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN',
-  'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO',
-];
-
-function extractField(xml, field) {
-  const open = `<${field}>`;
-  const close = `</${field}>`;
-  const start = xml.indexOf(open);
-  if (start < 0) return null;
-  const end = xml.indexOf(close, start);
-  if (end < 0) return null;
-  const value = xml.slice(start + open.length, end).trim();
-  return value || null;
+function wfsUrl(params = {}) {
+  const qs = new URLSearchParams({
+    service: 'WFS',
+    version: '2.0.0',
+    request: 'GetFeature',
+    typeNames: LAYER,
+    outputFormat: 'application/json',
+    srsName: 'EPSG:4326',
+    ...params,
+  });
+  return `${WFS_BASE}?${qs.toString()}`;
 }
 
-function extractCdata(xml, field) {
-  const raw = extractField(xml, field);
-  if (!raw) return null;
-  const cdataStart = raw.indexOf('<![CDATA[');
-  if (cdataStart < 0) return raw;
-  const cdataEnd = raw.indexOf(']]>');
-  if (cdataEnd < 0) return raw;
-  return raw.slice(cdataStart + 9, cdataEnd).trim() || null;
+function asNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
 }
 
-function parseItems(xml) {
-  const items = [];
-  let cursor = 0;
-  while (true) {
-    const itemStart = xml.indexOf('<item', cursor);
-    if (itemStart < 0) break;
-    const itemEnd = xml.indexOf('</item>', itemStart);
-    if (itemEnd < 0) break;
-    const block = xml.slice(itemStart, itemEnd + 7);
-    cursor = itemEnd + 7;
-
-    const icao = extractField(block, 'AeroCode');
-    const lat = parseFloat(extractField(block, 'lat'));
-    const lon = parseFloat(extractField(block, 'lng'));
-    if (!icao || !Number.isFinite(lat) || !Number.isFinite(lon)) continue;
-
-    items.push({
-      icao,
-      name: extractCdata(block, 'name') || icao,
-      city: extractCdata(block, 'city') || '',
-      uf: extractField(block, 'uf') || '',
-      lat,
-      lon,
-    });
-  }
-  return items;
+function metersToFeet(value) {
+  const n = asNumber(value);
+  return n == null ? null : Math.round(n * 3.28084);
 }
 
-async function fetchUfPage(uf, page) {
-  const url = `${BASE}?apiKey=${API_KEY}&apiPass=${API_PASS}&area=rotaer&uf=${uf}&page=${page}`;
+function firstPoint(feature) {
+  const geom = feature.geometry;
+  if (!geom) return null;
+  if (geom.type === 'Point' && Array.isArray(geom.coordinates)) return geom.coordinates;
+  if (geom.type === 'MultiPoint' && Array.isArray(geom.coordinates?.[0])) return geom.coordinates[0];
+  return null;
+}
+
+function featureToAerodrome(feature) {
+  const p = feature.properties || {};
+  const code = String(p.localidade_id || '').trim().toUpperCase();
+  if (!code) return null;
+
+  const point = firstPoint(feature);
+  const lon = asNumber(p.longitude_dec) ?? asNumber(point?.[0]);
+  const lat = asNumber(p.latitude_dec) ?? asNumber(point?.[1]);
+  if (lat == null || lon == null) return null;
+
+  const elevationM = asNumber(p.elevacao);
+  const elevationFt = p.elev_uom === 'M' ? metersToFeet(elevationM) : elevationM;
+
+  return {
+    icao: code,
+    name: String(p.nome || code).trim(),
+    city: String(p.cidade || '').trim(),
+    uf: String(p.uf || '').trim(),
+    lat: Math.round(lat * 1_000_000) / 1_000_000,
+    lon: Math.round(lon * 1_000_000) / 1_000_000,
+    type: String(p.tipo || '').trim(),
+    fir: String(p.fir || '').trim(),
+    elevation_ft: elevationFt,
+  };
+}
+
+async function fetchAerodromes() {
+  const url = wfsUrl();
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${uf} page ${page}`);
-  return parseItems(await res.text());
-}
+  if (!res.ok) throw new Error(`GeoAISWEB ${LAYER} returned HTTP ${res.status}`);
 
-async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  const data = await res.json();
+  if (!data?.features?.length) {
+    throw new Error(`GeoAISWEB ${LAYER} returned no features`);
+  }
+
+  return data.features;
+}
 
 async function main() {
-  console.log(`Sincronizando aeródromos do ROTAER (AISWEB)...`);
+  console.log(`Sincronizando aerodromos/helipontos do GeoAISWEB (${LAYER})...`);
+  const features = await fetchAerodromes();
   const collected = new Map();
-  let errors = 0;
+  let skipped = 0;
 
-  for (let i = 0; i < UFS.length; i++) {
-    const uf = UFS[i];
-    let page = 1;
-    let ufCount = 0;
-
-    while (true) {
-      try {
-        const items = await fetchUfPage(uf, page);
-        if (items.length === 0) break;
-        for (const a of items) collected.set(a.icao, a);
-        ufCount += items.length;
-        if (items.length < 100) break;
-        page++;
-        await sleep(50);
-      } catch (e) {
-        console.warn(`  ! ${uf} pag ${page}: ${e.message}`);
-        errors++;
-        break;
-      }
+  for (const feature of features) {
+    const item = featureToAerodrome(feature);
+    if (!item) {
+      skipped++;
+      continue;
     }
-    console.log(`  [${i + 1}/${UFS.length}] ${uf}: ${ufCount} aeródromos (total: ${collected.size})`);
-    await sleep(100);
+    collected.set(item.icao, item);
   }
 
   const sorted = Array.from(collected.values()).sort((a, b) => a.icao.localeCompare(b.icao));
@@ -117,8 +102,25 @@ async function main() {
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, JSON.stringify(sorted) + '\n');
 
-  console.log(`\nGravado ${sorted.length} aeródromos em ${outPath}`);
-  if (errors > 0) console.log(`Atenção: ${errors} erros durante o sync.`);
+  const amendments = new Map();
+  for (const feature of features) {
+    const amendment = feature.properties?.emenda;
+    if (amendment) amendments.set(amendment, (amendments.get(amendment) || 0) + 1);
+  }
+
+  console.log(`Gravado ${sorted.length} localidades em ${outPath}`);
+  console.log(`Ignorados sem codigo/coordenada: ${skipped}`);
+  if (amendments.size) {
+    console.log(
+      `Emendas: ${Array.from(amendments.entries())
+        .sort()
+        .map(([key, count]) => `${key} (${count})`)
+        .join(', ')}`
+    );
+  }
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

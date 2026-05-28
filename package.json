@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:single": "SINGLE_FILE=1 vite build --outDir dist-single",
+    "build:single": "node scripts/build-single.mjs",
     "preview": "vite preview",
+    "data:check": "node scripts/check-data.mjs",
+    "data:sync": "npm run sync-data",
     "sync-data": "node scripts/sync-all.mjs",
     "sync-aerodromes": "node scripts/sync-aerodromes.mjs",
     "sync-waypoints": "node scripts/sync-waypoints.mjs",

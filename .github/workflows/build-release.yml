@@ -1,9 +1,12 @@
-name: Build and Release
+name: Legacy Tauri Build and Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag for the legacy desktop build, e.g. v0.93'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -39,22 +42,20 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'ATC Tools - Sistema de Radiais ${{ github.ref_name }}'
+          tagName: ${{ inputs.tag }}
+          releaseName: 'ATC Tools Desktop Legado ${{ inputs.tag }}'
           releaseBody: |
-            ## Sistema de Radiais - ATC Tools ${{ github.ref_name }}
+            ## ATC Tools Desktop Legado ${{ inputs.tag }}
 
-            ### Dados Embutidos (100% Offline)
-            - **5.190 aeródromos** (ROTAER)
-            - **7.978 waypoints/fixos/VOR/NDB** (GeoServer DECEA)
-            - **107 TMAs** + **64 CTRs** + **5 FIRs** (polígonos oficiais DECEA)
+            Esta build Tauri e mantida apenas como legado. O produto principal e a versao web publicada pelo GitHub Pages.
 
-            ### Download
-            - **Setup.exe** - Instalador Windows
-            - **MSI** - Instalador Windows
+            ### Antes de usar em producao
+            - Conferir versoes em package.json, tauri.conf.json e Cargo.toml
+            - Conferir dados embutidos em src-tauri/data_*.json
+            - Validar assinatura, updater e instaladores
 
             ### Changelog
-            Ver commits para detalhes das mudanças.
+            Ver commits para detalhes das mudancas.
           releaseDraft: false
           prerelease: false
 

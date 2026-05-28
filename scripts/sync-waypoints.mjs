@@ -18,9 +18,10 @@ const ROOT = resolve(__dirname, '..');
 
 // Candidate layer names tried in order (DECEA has renamed these over time)
 const LAYER_CANDIDATES = [
+  'ICA:waypoint_aisweb',
+  'ICA:waypoint',
   'ICA:enr_wpt',
   'ICA:wpt',
-  'ICA:waypoint',
 ];
 
 const WFS_BASE = 'https://geoaisweb.decea.mil.br/geoserver/ICA/wfs';
@@ -61,15 +62,24 @@ function pickField(props, candidates) {
 function featureToWaypoint(feature) {
   const props = feature.properties || {};
   const geom = feature.geometry;
-  if (!geom || geom.type !== 'Point' || !Array.isArray(geom.coordinates)) return null;
 
   const id = pickField(props, ['ident', 'identifier', 'name', 'wpt_id', 'codeId']);
   if (!id) return null;
 
-  const [lon, lat] = geom.coordinates;
+  let coords = null;
+  if (geom?.type === 'Point' && Array.isArray(geom.coordinates)) coords = geom.coordinates;
+  if (geom?.type === 'MultiPoint' && Array.isArray(geom.coordinates?.[0])) coords = geom.coordinates[0];
+
+  const lon = Number.isFinite(props.longitude) ? props.longitude : coords?.[0];
+  const lat = Number.isFinite(props.latitude) ? props.latitude : coords?.[1];
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
 
-  return { id: id.toUpperCase(), lat, lon };
+  return {
+    id: id.toUpperCase(),
+    lat: Math.round(lat * 1_000_000) / 1_000_000,
+    lon: Math.round(lon * 1_000_000) / 1_000_000,
+    type: pickField(props, ['tipo', 'codetype']) || '',
+  };
 }
 
 async function main() {

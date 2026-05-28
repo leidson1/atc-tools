@@ -12,9 +12,10 @@ import { getConfig, saveConfig } from './lib/storage.js';
 import { parseCoordinate } from './lib/coord-parser.js';
 
 function aerodromeToNavPoint(info) {
+  const type = info.type === 'HP' ? 'HP' : 'AD';
   return {
     identifier: info.icao_code,
-    point_type: 'AD',
+    point_type: type,
     name: info.name,
     lat: info.arp_lat,
     lon: info.arp_lon,

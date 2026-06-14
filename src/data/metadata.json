@@ -1,73 +1,73 @@
 {
-  "generated_at": "2026-05-28T11:14:54.729Z",
+  "generated_at": "2026-06-14T13:14:59.178Z",
   "sources": {
     "rotaer_page": "https://aisweb.decea.mil.br/?i=aerodromos&tab=rotaer",
     "rotaer_pdf": "https://aisweb.decea.mil.br/downloads/rotaer/rotaer_completo.pdf",
     "geoserver_wfs": "https://geoaisweb.decea.mil.br/geoserver/ICA/wfs"
   },
   "rotaer": {
-    "damdt": "D-AMDT 22-26",
-    "effective": "28/05/26",
-    "pdfLastModified": "Thu, 28 May 2026 11:06:09 GMT",
-    "pdfEtag": "\"6a1821a1-5bc6b6\"",
-    "pdfSize": "6014646"
+    "damdt": "D-AMDT 25-26",
+    "effective": "18/06/26",
+    "pdfLastModified": "Sun, 14 Jun 2026 13:05:52 GMT",
+    "pdfEtag": "\"6a2ea730-5c185d\"",
+    "pdfSize": "6035549"
   },
   "layers": {
     "ICA:airport_heliport": {
       "layer": "ICA:airport_heliport",
-      "officialCount": 5980,
-      "comparableCount": 5980,
-      "uniqueCount": 5980,
-      "amendment": "2026-05-14Z (5980)",
+      "officialCount": 6001,
+      "comparableCount": 6001,
+      "uniqueCount": 6001,
+      "amendment": "2026-06-11Z (6001)",
       "futureAmendment": "-"
     },
     "ICA:waypoint_aisweb": {
       "layer": "ICA:waypoint_aisweb",
-      "officialCount": 7898,
-      "comparableCount": 7892,
-      "uniqueCount": 7892,
-      "amendment": "2026-05-14Z (7898)",
-      "futureAmendment": "2026-06-11Z (7898)"
+      "officialCount": 7938,
+      "comparableCount": 7932,
+      "uniqueCount": 7932,
+      "amendment": "2026-06-11Z (7938)",
+      "futureAmendment": "2026-07-09Z (7938)"
     },
     "ICA:vor": {
       "layer": "ICA:vor",
       "officialCount": 77,
       "comparableCount": 77,
       "uniqueCount": null,
-      "amendment": "2026-05-14Z (77)",
-      "futureAmendment": "2026-06-11Z (77)"
+      "amendment": "2026-06-11Z (77)",
+      "futureAmendment": "2026-07-09Z (77)"
     },
     "ICA:ndb": {
       "layer": "ICA:ndb",
       "officialCount": 24,
       "comparableCount": 24,
       "uniqueCount": null,
-      "amendment": "2026-05-14Z (24)",
-      "futureAmendment": "2026-06-11Z (24)"
+      "amendment": "2026-06-11Z (24)",
+      "futureAmendment": "2026-07-09Z (24)"
     },
     "ICA:TMA": {
       "layer": "ICA:TMA",
-      "officialCount": 53,
-      "comparableCount": 53,
+      "officialCount": 62,
+      "comparableCount": 62,
       "uniqueCount": null,
-      "amendment": "2026-05-14Z (53)",
-      "futureAmendment": "2026-06-11Z (53)"
+      "amendment": "2026-06-11Z (62)",
+      "futureAmendment": "2026-07-09Z (62)"
     },
     "ICA:CTR": {
       "layer": "ICA:CTR",
       "officialCount": 65,
       "comparableCount": 65,
       "uniqueCount": null,
-      "amendment": "2026-05-14Z (65)",
-      "futureAmendment": "2026-06-11Z (65)"
+      "amendment": "2026-06-11Z (65)",
+      "futureAmendment": "2026-07-09Z (65)"
     },
     "ICA:fir": {
       "layer": "ICA:fir",
       "officialCount": 5,
       "comparableCount": 5,
       "uniqueCount": null,
-      "amendment": "2026-05-14Z (5)",
-      "futureAmendment": "2026-06-11Z (5)"
+      "amendment": "2026-06-11Z (5)",
+      "futureAmendment": "2026-07-09Z (5)"
     }
   }
 }

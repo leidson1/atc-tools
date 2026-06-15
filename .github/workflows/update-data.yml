@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
+  actions: write
 
 concurrency:
   group: official-data-update
@@ -45,7 +45,7 @@ jobs:
             echo "Official data is already current."
           elif [ "$status" -eq 2 ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "Official data changed; preparing update PR."
+            echo "Official data changed; syncing and publishing."
           else
             exit "$status"
           fi
@@ -73,61 +73,23 @@ jobs:
             echo "has_diff=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Commit and push update branch
-        if: steps.diff.outputs.has_diff == 'true'
-        id: push
-        shell: bash
-        run: |
-          branch="data/update-official-sources"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B "$branch"
-          git add -A
-          git commit -m "Atualiza dados oficiais"
-          git push --force-with-lease origin "$branch"
-          echo "branch=$branch" >> "$GITHUB_OUTPUT"
-
-      - name: Create or update pull request
+      - name: Commit and publish to default branch
         if: steps.diff.outputs.has_diff == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          BRANCH: ${{ steps.push.outputs.branch }}
-          BASE_BRANCH: ${{ github.event.repository.default_branch }}
-          REPOSITORY: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         shell: bash
         run: |
-          title="Atualiza dados oficiais do GeoAISWEB"
-          body_file="$(mktemp)"
-          cat > "$body_file" <<'EOF'
-          ## O que mudou
-          - Atualiza aerodromos, helipontos, fixos, FIR, TMA e CTR a partir das fontes oficiais DECEA.
-          - Atualiza a fotografia em `src/data/metadata.json` com D-AMDT, vigencia, emendas e metadados do ROTAER.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Atualiza dados oficiais do ROTAER/GeoAISWEB (automatico)"
 
-          ## Como validar
-          - `node scripts/check-data.mjs --fail-on-change`
-          - `npm run build`
-          - `npm run build:single`
+          # Publica direto no branch padrao; em caso de corrida, rebase e tenta de novo.
+          git push origin "HEAD:${DEFAULT_BRANCH}" \
+            || ( git pull --rebase origin "${DEFAULT_BRANCH}" \
+                 && git push origin "HEAD:${DEFAULT_BRANCH}" )
 
-          ## Observacao
-          Este PR foi criado automaticamente pelo workflow `Update Official Data`.
-          EOF
-
-          if pr_url="$(gh pr view "$BRANCH" --json url --jq .url 2>/dev/null)"; then
-            gh pr edit "$BRANCH" --title "$title" --body-file "$body_file" --base "$BASE_BRANCH"
-            echo "Updated existing PR: $pr_url"
-          else
-            set +e
-            output="$(gh pr create --draft --base "$BASE_BRANCH" --head "$BRANCH" --title "$title" --body-file "$body_file" 2>&1)"
-            status=$?
-            set -e
-
-            if [ "$status" -eq 0 ]; then
-              echo "$output"
-            elif echo "$output" | grep -qi "not permitted to create"; then
-              echo "$output"
-              echo "::warning title=Pull request nao criado::O GitHub Actions nao tem permissao para criar PRs neste repositorio. A branch foi enviada e pode virar PR manualmente: https://github.com/$REPOSITORY/pull/new/$BRANCH"
-            else
-              echo "$output"
-              exit "$status"
-            fi
-          fi
+          # Push via GITHUB_TOKEN nao dispara outros workflows; aciona o deploy explicitamente.
+          gh workflow run deploy-pages.yml --ref "${DEFAULT_BRANCH}"
+          echo "::notice title=Dados publicados::Dados oficiais atualizados e deploy do GitHub Pages acionado."

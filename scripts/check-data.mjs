@@ -61,6 +61,29 @@ function hasChanged(current, previous) {
   return false;
 }
 
+// Fetch resiliente: as fontes do DECEA caem com frequencia (ECONNRESET/timeout).
+// Sem isso, uma unica queda de rede derruba o run inteiro.
+async function fetchWithRetry(url, options = {}, { attempts = 4, timeoutMs = 30000 } = {}) {
+  let lastErr;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } catch (err) {
+      lastErr = err;
+      if (attempt < attempts) {
+        const backoff = 1000 * 2 ** (attempt - 1); // 1s, 2s, 4s
+        console.log(`    (rede instavel: ${err.message}; tentativa ${attempt}/${attempts}, novo try em ${backoff}ms)`);
+        await new Promise((r) => setTimeout(r, backoff));
+      }
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw lastErr;
+}
+
 async function fetchLayerSummary(item) {
   const qs = new URLSearchParams({
     service: 'WFS',
@@ -70,7 +93,7 @@ async function fetchLayerSummary(item) {
     outputFormat: 'application/json',
     srsName: 'EPSG:4326',
   });
-  const res = await fetch(`${WFS_BASE}?${qs.toString()}`);
+  const res = await fetchWithRetry(`${WFS_BASE}?${qs.toString()}`);
   if (!res.ok) throw new Error(`${item.layer} HTTP ${res.status}`);
   const data = await res.json();
   const features = data.features || [];
@@ -92,8 +115,8 @@ async function fetchLayerSummary(item) {
 
 async function fetchRotaerSummary() {
   const [pageRes, pdfRes] = await Promise.all([
-    fetch(ROTAER_PAGE),
-    fetch(ROTAER_PDF, { method: 'HEAD' }),
+    fetchWithRetry(ROTAER_PAGE),
+    fetchWithRetry(ROTAER_PDF, { method: 'HEAD' }),
   ]);
 
   let page = '';

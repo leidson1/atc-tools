@@ -46,6 +46,9 @@ jobs:
           elif [ "$status" -eq 2 ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
             echo "Official data changed; syncing and publishing."
+          elif [ "$status" -eq 3 ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Fontes oficiais indisponiveis::DECEA inacessivel (rede) apos varias tentativas. Pulando hoje; o agendamento tenta novamente amanha."
           else
             exit "$status"
           fi

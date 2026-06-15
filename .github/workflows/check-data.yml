@@ -35,7 +35,9 @@ jobs:
           if [ "$status" -eq 0 ]; then
             echo "Official data is current."
           elif [ "$status" -eq 2 ]; then
-            echo "::warning title=Dados oficiais mudaram::Mudanca detectada nas fontes oficiais. O workflow Update Official Data deve abrir ou atualizar a branch data/update-official-sources."
+            echo "::warning title=Dados oficiais mudaram::Mudanca detectada nas fontes oficiais. O workflow Update Official Data vai sincronizar e publicar automaticamente."
+          elif [ "$status" -eq 3 ]; then
+            echo "::warning title=Fontes oficiais indisponiveis::DECEA inacessivel (rede) apos varias tentativas. Verificacao pulada; tenta novamente amanha."
           else
             exit "$status"
           fi

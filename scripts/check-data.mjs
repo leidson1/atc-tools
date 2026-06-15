@@ -203,7 +203,16 @@ async function main() {
   }
 }
 
+// Erro de rede (fonte do DECEA fora do ar) nao e falha do projeto: sai com
+// codigo 3 para o workflow tratar como "pula hoje, tenta amanha".
+function isNetworkError(e) {
+  const code = String(e?.cause?.code || e?.code || '');
+  const msg = `${e?.message || ''} ${e?.cause?.message || ''}`;
+  return /ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|ECONNREFUSED|UND_ERR|ABORT/i.test(code)
+    || /fetch failed|network|timeout|aborted/i.test(msg);
+}
+
 main().catch((e) => {
   console.error(e);
-  process.exit(1);
+  process.exit(isNetworkError(e) ? 3 : 1);
 });

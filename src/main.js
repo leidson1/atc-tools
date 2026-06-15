@@ -15,6 +15,7 @@ import { initDrawer } from './drawer.js';
 import { initVersionIndicator } from './version-indicator.js';
 import { initTrajectory, runOperation, setOperationBase, setOperationToRadialMode } from './trajectory.js';
 import { initAerodromeLayer, toggleAerodromeLayer } from './aerodrome-layer.js';
+import { initLiveTraffic, toggleLiveTraffic } from './live-traffic.js';
 
 // App state
 let baseAerodrome = null;
@@ -30,6 +31,7 @@ async function init() {
   // Initialize airspace layers
   initAirspaceLayers(map);
   initAerodromeLayer(map);
+  initLiveTraffic(map);
 
   // Initialize settings
   initSettings(onSettingsSave);
@@ -63,6 +65,15 @@ async function init() {
   adBtn?.addEventListener('click', () => {
     adBtn.classList.toggle('active', toggleAerodromeLayer());
   });
+
+  // Live traffic layer toggle (OpenSky Network)
+  const trfBtn = document.getElementById('btn-toggle-trf');
+  trfBtn?.addEventListener('click', () => {
+    trfBtn.classList.toggle('active', toggleLiveTraffic());
+  });
+
+  // Aircraft "use as target" → reaproveita o handler de clique no mapa
+  window.__onTargetClick = (lat, lon) => onMapClick(lat, lon);
 
   // History click handler
   window.__onHistoryClick = (result) => {

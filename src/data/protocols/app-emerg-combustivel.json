@@ -7,7 +7,7 @@
   "title": "Emergência por Combustível",
   "subtitle": "MAYDAY COMBUSTÍVEL ou situação relacionada ao combustível",
   "estimated_steps": 1,
-  "intro": "Ao receber uma informação da tripulação de emergência relacionado ao combustível ou mesmo a expressão \"MAYDAY COMBUSTÍVEL\", o APP-PJ deverá seguir as instruções para atendimento à aeronave em emergência previstos no item 7.1.1, ASSISTÊNCIA ÀS AERONAVES EM EMERGÊNCIA deste modelo operacional.",
+  "intro": "Ao receber uma informação da tripulação de emergência relacionado ao combustível ou mesmo a expressão **\"MAYDAY COMBUSTÍVEL\"**, o APP-PJ deverá seguir as instruções para atendimento à aeronave em emergência previstos no item 7.1.1, ASSISTÊNCIA ÀS AERONAVES EM EMERGÊNCIA deste modelo operacional.",
   "steps": [
     {
       "n": "1",

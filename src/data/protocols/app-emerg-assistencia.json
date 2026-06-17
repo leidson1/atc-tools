@@ -31,13 +31,13 @@
         },
         {
           "n": "v",
-          "text": "Se possível, autonomia remanescente, pessoas a bordo e se há carga perigosa;"
+          "text": "Se possível, **autonomia remanescente, pessoas a bordo e se há carga perigosa**;"
         }
       ]
     },
     {
       "n": "b",
-      "text": "Notificar a TWR-PJ para acionar a SCI via sistema de alarme (sirene) e ao APOC, e repassar a TWR-PJ, quando necessário:",
+      "text": "Notificar a **TWR-PJ** para **acionar a SCI via sistema de alarme (sirene)** e ao **APOC**, e repassar a TWR-PJ, quando necessário:",
       "contacts": [
         "TWR-PJ",
         "APOC"

@@ -11,7 +11,7 @@
   "steps": [
     {
       "n": "a",
-      "text": "Solicitar à aeronave as informações da Emergência Médica (nome, sexo, idade, enfermidade, aparência e sintomas do passageiro, hora estimada do pouso, entre outras informações julgadas pertinentes);"
+      "text": "Solicitar à aeronave as informações da Emergência Médica (**nome, sexo, idade, enfermidade, aparência e sintomas do passageiro, hora estimada do pouso**, entre outras informações julgadas pertinentes);"
     },
     {
       "n": "b",

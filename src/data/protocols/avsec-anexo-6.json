@@ -9,25 +9,113 @@
   "estimated_steps": 16,
   "note": "A ação 1 não se aplica à aeronave procedente do exterior, desde que as coordenações prévias tenham sido realizadas entre os órgãos ATC. Nessas coordenações, se possível, serão obtidos os dados específicos do voo, tais como: a confirmação do destino, alternativa, autonomia, pessoas a bordo etc.",
   "steps": [
-    { "n": "1", "text": "Ao ser avisado, confirmar as informações do piloto, visando à comunicação com os organismos pertinentes relacionados a seguir." },
-    { "n": "2", "text": "Não dar quaisquer orientações nem sugestões no que diz respeito a ações que serão tomadas pela tripulação em relação a um artefato explosivo ou QBRN." },
-    { "n": "3", "text": "Aumentar os mínimos de separação vertical e horizontal aplicados para, pelo menos, o dobro entre a aeronave ameaçada e as demais, onde aplicável." },
-    { "n": "4", "text": "Comunicação interna do órgão ATS:", "children": [
-      { "n": "TWR/AFIS", "text": "Comunicar imediatamente ao APP, ao CGNA e ao Chefe do Órgão.", "contacts": ["APP", "CGNA", "Chefe do Órgão"] },
-      { "n": "APP", "text": "Comunicar imediatamente ao ACC e ao CGNA.", "contacts": ["ACC", "CGNA"] },
-      { "n": "ACC", "text": "Comunicar ao Comandante/Chefe do CINDACTA/SRPV-SP, ao CGNA, ao COpM e ao ARCC da área envolvida, em cuja FIR a aeronave esteja desenvolvendo seu voo.", "contacts": ["Cmt CINDACTA/SRPV-SP", "CGNA", "COpM", "ARCC"] }
-    ]},
-    { "n": "5", "text": "Solicitar ao CGNA a comunicação ao representante pertinente da Administração Aeroportuária para onde se dirige a aeronave, que, por sua vez, comunicará ao explorador da aeronave ou a seu representante.", "contacts": ["CGNA"] },
-    { "n": "6", "text": "Manter informado o CGNA, o COpM e o ARCC sobre qualquer nova ação realizada pela aeronave em questão.", "contacts": ["CGNA", "COpM", "ARCC"] },
-    { "n": "7", "text": "Auxiliar a Administração Aeroportuária, atuando como facilitador das comunicações disponíveis no órgão ATS, em coordenação com o COpM." },
-    { "n": "8", "text": "Retransmitir as mensagens apropriadas, entre a aeronave e as autoridades designadas." },
-    { "n": "9", "text": "Alocar, caso possível, uma frequência exclusiva para comunicação com a aeronave." },
-    { "n": "10", "text": "Restringir ao estritamente necessário a veiculação de mensagens por outras aeronaves, por intermédio da frequência que estiver sendo utilizada." },
-    { "n": "11", "text": "Atender prontamente às chamadas das aeronaves, dando assistência ao desenvolvimento de suas operações." },
-    { "n": "12", "text": "Aprovar, tão logo quanto possível, qualquer solicitação feita pela tripulação para subir ou descer, com a finalidade de equalizar ou reduzir o diferencial entre a pressão do ar exterior e a pressão do ar na cabine." },
-    { "n": "13", "text": "No caso de transferência do tráfego para outros órgãos ATC (nacional ou estrangeiro), devem ser fornecidos todos os dados relacionados com o voo." },
-    { "n": "14", "text": "Manter informados os órgãos ATS que possam ser afetados pela progressão do voo sobre todos os fatores pertinentes, tais como: autonomia de combustível da aeronave, possibilidade de mudanças repentinas de rota ou de destino etc. Os órgãos ATS mencionados incluem também aqueles nacionais ou estrangeiros responsáveis tanto pela transferência do tráfego, como pelo aeródromo de destino conhecido ou suposto do voo em questão." },
-    { "n": "15", "text": "Prestar toda a assistência à aeronave no caso da intenção de pouso em qualquer aeroporto em território nacional, para garantir a segurança do voo, levando em conta a possibilidade de um pouso de emergência, e tomar as decisões apropriadas para agilizar as fases do voo, inclusive o pouso, se possível, evitando o sobrevoo de áreas densamente povoadas, em coordenação com o COpM.", "contacts": ["COpM"] },
-    { "n": "16", "text": "Fornecer à aeronave em voo, quando necessário, autorização para o novo destino, sem atraso, de acordo com as orientações da autoridade competente." }
-  ]
+    {
+      "n": "1",
+      "text": "Ao ser avisado, confirmar as informações do piloto, visando à comunicação com os organismos pertinentes relacionados a seguir."
+    },
+    {
+      "n": "2",
+      "text": "Não dar quaisquer orientações nem sugestões no que diz respeito a ações que serão tomadas pela tripulação em relação a um artefato explosivo ou QBRN."
+    },
+    {
+      "n": "3",
+      "text": "Aumentar os mínimos de separação vertical e horizontal aplicados para, pelo menos, o dobro entre a aeronave ameaçada e as demais, onde aplicável."
+    },
+    {
+      "n": "4",
+      "text": "Comunicação interna do órgão ATS:",
+      "children": [
+        {
+          "n": "TWR/AFIS",
+          "text": "Comunicar imediatamente ao APP, ao CGNA e ao Chefe do Órgão.",
+          "contacts": [
+            "APP",
+            "CGNA",
+            "Chefe do Órgão"
+          ]
+        },
+        {
+          "n": "APP",
+          "text": "Comunicar imediatamente ao ACC e ao CGNA.",
+          "contacts": [
+            "ACC",
+            "CGNA"
+          ]
+        },
+        {
+          "n": "ACC",
+          "text": "Comunicar ao Comandante/Chefe do CINDACTA/SRPV-SP, ao CGNA, ao COpM e ao ARCC da área envolvida, em cuja FIR a aeronave esteja desenvolvendo seu voo.",
+          "contacts": [
+            "Cmt CINDACTA/SRPV-SP",
+            "CGNA",
+            "COpM",
+            "ARCC"
+          ]
+        }
+      ]
+    },
+    {
+      "n": "5",
+      "text": "Solicitar ao CGNA a comunicação ao representante pertinente da Administração Aeroportuária para onde se dirige a aeronave, que, por sua vez, comunicará ao explorador da aeronave ou a seu representante.",
+      "contacts": [
+        "CGNA"
+      ]
+    },
+    {
+      "n": "6",
+      "text": "Manter informado o CGNA, o COpM e o ARCC sobre qualquer nova ação realizada pela aeronave em questão.",
+      "contacts": [
+        "CGNA",
+        "COpM",
+        "ARCC"
+      ]
+    },
+    {
+      "n": "7",
+      "text": "Auxiliar a Administração Aeroportuária, atuando como facilitador das comunicações disponíveis no órgão ATS, em coordenação com o COpM."
+    },
+    {
+      "n": "8",
+      "text": "Retransmitir as mensagens apropriadas, entre a aeronave e as autoridades designadas."
+    },
+    {
+      "n": "9",
+      "text": "Alocar, caso possível, uma frequência exclusiva para comunicação com a aeronave."
+    },
+    {
+      "n": "10",
+      "text": "Restringir ao estritamente necessário a veiculação de mensagens por outras aeronaves, por intermédio da frequência que estiver sendo utilizada."
+    },
+    {
+      "n": "11",
+      "text": "Atender prontamente às chamadas das aeronaves, dando assistência ao desenvolvimento de suas operações."
+    },
+    {
+      "n": "12",
+      "text": "Aprovar, tão logo quanto possível, qualquer solicitação feita pela tripulação para subir ou descer, com a finalidade de equalizar ou reduzir o diferencial entre a pressão do ar exterior e a pressão do ar na cabine."
+    },
+    {
+      "n": "13",
+      "text": "No caso de transferência do tráfego para outros órgãos ATC (nacional ou estrangeiro), devem ser fornecidos todos os dados relacionados com o voo."
+    },
+    {
+      "n": "14",
+      "text": "Manter informados os órgãos ATS que possam ser afetados pela progressão do voo sobre todos os fatores pertinentes, tais como: autonomia de combustível da aeronave, possibilidade de mudanças repentinas de rota ou de destino etc. Os órgãos ATS mencionados incluem também aqueles nacionais ou estrangeiros responsáveis tanto pela transferência do tráfego, como pelo aeródromo de destino conhecido ou suposto do voo em questão."
+    },
+    {
+      "n": "15",
+      "text": "Prestar toda a assistência à aeronave no caso da intenção de pouso em qualquer aeroporto em território nacional, para garantir a segurança do voo, levando em conta a possibilidade de um pouso de emergência, e tomar as decisões apropriadas para agilizar as fases do voo, inclusive o pouso, se possível, evitando o sobrevoo de áreas densamente povoadas, em coordenação com o COpM.",
+      "contacts": [
+        "COpM"
+      ]
+    },
+    {
+      "n": "16",
+      "text": "Fornecer à aeronave em voo, quando necessário, autorização para o novo destino, sem atraso, de acordo com as orientações da autoridade competente."
+    }
+  ],
+  "pdf": {
+    "file": "fichas-avsec-circea-100-56.pdf",
+    "page": 4
+  }
 }

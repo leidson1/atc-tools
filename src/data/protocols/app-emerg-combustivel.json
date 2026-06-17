@@ -9,6 +9,14 @@
   "estimated_steps": 1,
   "intro": "Ao receber uma informação da tripulação de emergência relacionado ao combustível ou mesmo a expressão \"MAYDAY COMBUSTÍVEL\", o APP-PJ deverá seguir as instruções para atendimento à aeronave em emergência previstos no item 7.1.1, ASSISTÊNCIA ÀS AERONAVES EM EMERGÊNCIA deste modelo operacional.",
   "steps": [
-    { "n": "1", "text": "Seguir as instruções da ficha \"Assistência às Aeronaves em Emergência\" (item 7.1.1).", "redirectTo": "app-emerg-assistencia" }
-  ]
+    {
+      "n": "1",
+      "text": "Seguir as instruções da ficha \"Assistência às Aeronaves em Emergência\" (item 7.1.1).",
+      "redirectTo": "app-emerg-assistencia"
+    }
+  ],
+  "pdf": {
+    "file": "modelo-app-emergencias.pdf",
+    "page": 2
+  }
 }

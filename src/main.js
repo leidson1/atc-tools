@@ -2,6 +2,7 @@ import './styles/main.css';
 import './styles/panel.css';
 import './styles/map.css';
 import './styles/components.css';
+import './styles/ops-support.css';
 
 import { calculateRdl, getAerodromeInfo } from './api.js';
 import { clearTrajectory, initMap, setAerodrome, showRdlOnMap } from './map.js';
@@ -16,6 +17,7 @@ import { initVersionIndicator } from './version-indicator.js';
 import { initTrajectory, runOperation, setOperationBase, setOperationToRadialMode } from './trajectory.js';
 import { initAerodromeLayer, toggleAerodromeLayer } from './aerodrome-layer.js';
 import { initLiveTraffic, toggleLiveTraffic } from './live-traffic.js';
+import { initOpsSupport } from './ops-support.js';
 
 // App state
 let baseAerodrome = null;
@@ -32,6 +34,9 @@ async function init() {
   initAirspaceLayers(map);
   initAerodromeLayer(map);
   initLiveTraffic(map);
+
+  // Initialize operations support module (checklists)
+  initOpsSupport();
 
   // Initialize settings
   initSettings(onSettingsSave);

@@ -1,0 +1,20 @@
+{
+  "id": "app-emerg-medica",
+  "category": "app-emergencias",
+  "color": "orange",
+  "source": "MODELO APP PJ 2024/01 — 7.1.7 EMERGÊNCIA MÉDICA",
+  "version": "2024/01",
+  "title": "Emergência Médica",
+  "subtitle": "Aeronave com enfermo ou lesionado a bordo",
+  "estimated_steps": 5,
+  "intro": "Sempre que o APP-PJ tomar conhecimento de enfermo ou lesionado a bordo de aeronave que se destine ao SBPJ, deverá:",
+  "steps": [
+    { "n": "a", "text": "Solicitar à aeronave as informações da Emergência Médica (nome, sexo, idade, enfermidade, aparência e sintomas do passageiro, hora estimada do pouso, entre outras informações julgadas pertinentes);" },
+    { "n": "b", "text": "Repassar a TWR-PJ para repassar ao APOC todas as informações repassadas pela aeronave;", "contacts": ["TWR-PJ", "APOC"], "children": [
+      { "n": "i", "text": "Durante o horário de prestação do AFIS, o APP-PJ deverá coordenar diretamente com o APOC.", "contacts": ["APOC"] }
+    ]},
+    { "n": "c", "text": "Atender prontamente às solicitações da aeronave;" },
+    { "n": "d", "text": "Dar prioridade a aeronave;" },
+    { "n": "e", "text": "Registrar em LRO." }
+  ]
+}

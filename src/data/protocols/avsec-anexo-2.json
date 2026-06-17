@@ -1,0 +1,26 @@
+{
+  "id": "avsec-anexo-2",
+  "category": "avsec-apoderamento",
+  "color": "red",
+  "source": "CIRCEA 100-56 — Anexo 2",
+  "version": "2024",
+  "title": "Apoderamento Ilícito de Aeronave NO SOLO",
+  "subtitle": "Ações Referentes ao Apoderamento Ilícito de Aeronave no Solo",
+  "estimated_steps": 14,
+  "steps": [
+    { "n": "1", "text": "Estar atento para identificar quaisquer indícios de ato de interferência ilícita, tais como: acionamento do código transponder 7500 ou não atendimento às instruções dos órgãos ATS." },
+    { "n": "2", "text": "Comunicar imediatamente ao ACC em cuja FIR esteja situado o aeroporto envolvido e à Administração Aeroportuária, que, por sua vez, comunicará ao explorador da aeronave ou ao seu representante indicado.", "contacts": ["ACC", "Adm. Aeroportuária"] },
+    { "n": "3", "text": "Comunicar, também, ao CGNA e ao Chefe do Órgão.", "contacts": ["CGNA", "Chefe do Órgão"] },
+    { "n": "4", "text": "Auxiliar a Administração Aeroportuária, atuando como facilitador das comunicações disponíveis no órgão ATS." },
+    { "n": "5", "text": "Retransmitir as mensagens apropriadas, entre a aeronave e as autoridades designadas." },
+    { "n": "6", "text": "Alocar, caso possível, uma frequência exclusiva para comunicação com a aeronave." },
+    { "n": "7", "text": "Restringir ao estritamente necessário a veiculação de mensagens por outras aeronaves, por intermédio da frequência que estiver sendo utilizada." },
+    { "n": "8", "text": "Atender, prontamente, às chamadas da aeronave, dando assistência ao desenvolvimento de suas operações." },
+    { "n": "9", "text": "Tomar as medidas necessárias para a permanência da aeronave no solo, assim como aquelas em atenção às orientações provenientes da autoridade competente, designada pela AAR ou Grupo de Decisão, conforme o caso." },
+    { "n": "10", "text": "Orientar a aeronave a se deslocar para o ponto remoto do aeroporto, adotando as demais ações pertinentes, de acordo com o PSA e as orientações da autoridade competente." },
+    { "n": "11", "text": "Caso não exista um ponto remoto predefinido ou a referida posição não esteja disponível, orientar a aeronave a se deslocar para uma área escolhida, conforme previsto no PSA ou, ainda, como definido pelo Gerente de Segurança Aeroportuária ou por outra autoridade competente." },
+    { "n": "12", "text": "Especificar a trajetória a ser seguida para o local de estacionamento. Essa trajetória deverá estar prevista no PSA ou, ainda, ser definida pelo Gerente de Segurança Aeroportuária ou por outra autoridade competente, tendo em vista a minimizar quaisquer riscos para o público, às demais aeronaves e às instalações do aeródromo." },
+    { "n": "13", "text": "Durante o desembarque de passageiros e da tripulação da aeronave ameaçada, manter outras aeronaves, veículos e pessoal de terra, a uma distância segura da aeronave envolvida, conforme previsto no PSA ou, ainda, como definido pelo Gerente de Segurança Aeroportuária ou por outra autoridade competente." },
+    { "n": "14", "text": "Orientar o trânsito de veículos e pessoas, conforme previsto no PSA ou, ainda, como definido pelo Gerente de Segurança Aeroportuária ou por outra autoridade competente, de forma a minimizar qualquer risco iminente, dando prioridade àqueles envolvidos na emergência." }
+  ]
+}

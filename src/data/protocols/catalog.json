@@ -1,0 +1,57 @@
+{
+  "version": "2024/01",
+  "groups": [
+    {
+      "id": "avsec-apoderamento",
+      "title": "Apoderamento Ilícito",
+      "subtitle": "Sequestro / ato de interferência ilícita",
+      "color": "red",
+      "icon": "shield-alert",
+      "source": "CIRCEA 100-56",
+      "protocols": ["avsec-anexo-2", "avsec-anexo-3"]
+    },
+    {
+      "id": "avsec-aviso-ameaca",
+      "title": "Aviso de Ameaça",
+      "subtitle": "Aeronave com bomba ou QBRN a bordo",
+      "color": "yellow",
+      "icon": "alert-triangle",
+      "source": "CIRCEA 100-56",
+      "protocols": ["avsec-anexo-5", "avsec-anexo-6"]
+    },
+    {
+      "id": "avsec-orientacao",
+      "title": "Orientação à Aeronave sobre Ameaça",
+      "subtitle": "Comunicação à tripulação sobre ameaça a bordo",
+      "color": "blue",
+      "icon": "alert-octagon",
+      "source": "CIRCEA 100-56",
+      "protocols": ["avsec-anexo-7", "avsec-anexo-8"]
+    },
+    {
+      "id": "app-emergencias",
+      "title": "Emergências APP",
+      "subtitle": "Assistência, EAL, Bomba, Descida, Combustível, Médica",
+      "color": "orange",
+      "icon": "siren",
+      "source": "MODELO APP PJ 2024/01",
+      "protocols": [
+        "app-emerg-assistencia",
+        "app-eal",
+        "app-emerg-bomba",
+        "app-emerg-descida",
+        "app-emerg-combustivel",
+        "app-emerg-medica"
+      ]
+    },
+    {
+      "id": "app-acidente",
+      "title": "Acidentes e Incidentes",
+      "subtitle": "Ocorrências aeronáuticas na jurisdição do APP-PJ",
+      "color": "purple",
+      "icon": "alert-circle",
+      "source": "MODELO APP PJ 2024/01",
+      "protocols": ["app-acidente"]
+    }
+  ]
+}

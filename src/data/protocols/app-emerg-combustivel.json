@@ -1,0 +1,14 @@
+{
+  "id": "app-emerg-combustivel",
+  "category": "app-emergencias",
+  "color": "orange",
+  "source": "MODELO APP PJ 2024/01 — 7.1.6 EMERGÊNCIA POR COMBUSTÍVEL",
+  "version": "2024/01",
+  "title": "Emergência por Combustível",
+  "subtitle": "MAYDAY COMBUSTÍVEL ou situação relacionada ao combustível",
+  "estimated_steps": 1,
+  "intro": "Ao receber uma informação da tripulação de emergência relacionado ao combustível ou mesmo a expressão \"MAYDAY COMBUSTÍVEL\", o APP-PJ deverá seguir as instruções para atendimento à aeronave em emergência previstos no item 7.1.1, ASSISTÊNCIA ÀS AERONAVES EM EMERGÊNCIA deste modelo operacional.",
+  "steps": [
+    { "n": "1", "text": "Seguir as instruções da ficha \"Assistência às Aeronaves em Emergência\" (item 7.1.1).", "redirectTo": "app-emerg-assistencia" }
+  ]
+}

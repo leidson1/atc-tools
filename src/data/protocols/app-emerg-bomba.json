@@ -1,0 +1,26 @@
+{
+  "id": "app-emerg-bomba",
+  "category": "app-emergencias",
+  "color": "orange",
+  "source": "MODELO APP PJ 2024/01 — 7.1.4 AMEAÇA DE BOMBA A BORDO DA AERONAVE",
+  "version": "2024/01",
+  "title": "Ameaça de Bomba a bordo",
+  "subtitle": "Procedimento APP-PJ para ameaça de bomba (artefatos explosivos, químicos, biológicos ou radiológicos)",
+  "estimated_steps": 4,
+  "intro": "Considera-se ameaça de bomba, qualquer tipo de comunicação, sugerindo ou indicando que a segurança de uma pessoa, de uma aeronave em voo ou em solo, de um aeroporto ou outra instalação da aviação civil possa estar em perigo pela presença de artefatos explosivos, químicos, biológicos ou radiológicos. Portanto, toda ameaça de bomba, antes de ser considerada como emergência, deverá ser analisada por uma Assessoria de Risco composta por representantes da Administração Aeroportuária Local, empresa aérea e Polícia Federal, na qual será definida a condição de emergência, caso o piloto já não a tenha declarado antes. Quem recebe a ameaça de bomba deve atentar para coletar o maior número possível de informações para facilitar sua avaliação e a identificação do autor da ameaça, procedendo conforme fichas da CIRCEA 100-56 (Anexo 04 e 05).",
+  "steps": [
+    { "n": "1", "text": "Em caso de ameaça de bomba por telefone, os operadores também deverão proceder conforme previsto nas fichas da CIRCEA 100-56 (Anexo 06) e Formulário de Relatório de Ameaça de Bomba (Anexo 07). Assim, ainda compete ao controlador da TWR-PJ:", "children": [
+      { "n": "a", "text": "Acionar imediatamente o COE/APOC (via HOT LINE);", "contacts": ["COE/APOC"] },
+      { "n": "b", "text": "Comunicar a decisão da Assessoria de Risco ao comandante da aeronave e obter do mesmo, para serem transmitidas ao COE/APOC, as seguintes informações complementares:", "contacts": ["COE/APOC"], "children": [
+        { "n": "i", "text": "Tipo, matrícula e operador da aeronave;" },
+        { "n": "ii", "text": "Número de pessoas a bordo;" },
+        { "n": "iii", "text": "Hora estimada de pouso;" },
+        { "n": "iv", "text": "Se conduz carga perigosa e respectiva natureza;" },
+        { "n": "v", "text": "Outros dados que o comandante da aeronave julgar necessário." }
+      ]},
+      { "n": "c", "text": "Informar a TWR-PJ, ACC-BS e ACC-AZ, RCC-BS e CGNA;", "contacts": ["TWR-PJ", "ACC-BS", "ACC-AZ", "RCC-BS", "CGNA"] },
+      { "n": "d", "text": "Informar o responsável pela DNPJ-1 e DNPJ; e", "contacts": ["DNPJ-1", "DNPJ"] }
+    ]},
+    { "n": "2", "text": "Em cumprimento ao Plano de Emergência do Aeroporto (PLEM), além do previsto acima, o Controlador do APP-PJ deverá verificar as condições operacionais do Aeroporto de Palmas junto com a TWR-PJ.", "contacts": ["TWR-PJ"] }
+  ]
+}

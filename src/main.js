@@ -65,6 +65,10 @@ async function init() {
   setupLayerToggle('btn-toggle-tma', 'tma');
   setupLayerToggle('btn-toggle-ctr', 'ctr');
 
+  // FIR + TMA ligados por padrão (CTR / AD ficam livres pro usuário)
+  document.getElementById('btn-toggle-fir')?.click();
+  document.getElementById('btn-toggle-tma')?.click();
+
   // Aerodrome layer toggle (canvas)
   const adBtn = document.getElementById('btn-toggle-ad');
   adBtn?.addEventListener('click', () => {

@@ -561,6 +561,12 @@ function toggleStep(key, newStatus) {
   s.status = newStatus;
   s.completedAt = newStatus === 'pending' ? null : Date.now();
   if (newStatus !== 'na') s.naReason = '';
+  // Desfazer (pending) em passo com contatos: também limpa os chips,
+  // pra evitar "todos chips clicados + status pendente" (estado inconsistente
+  // que reapareceria como done na próxima auto-conclusão).
+  if (newStatus === 'pending' && hasContacts(s)) {
+    s.contactedWith = [];
+  }
   updateParentStatus(s.parent);
   saveToStorage();
   refreshUI();
@@ -825,7 +831,25 @@ function loadFromStorage() {
     const parsed = JSON.parse(raw);
     if (parsed && parsed.protocol && parsed.steps) {
       const fresh = getProtocol(parsed.protocol.id);
-      if (fresh) parsed.protocol = fresh;
+      if (fresh) {
+        parsed.protocol = fresh;
+        // Re-hidrata a estrutura dos passos com base no protocolo atual
+        // (preserva status / horários / contatos por chave). Garante que
+        // hasChildren e demais flags estruturais venham sempre da fonte.
+        const stateByKey = {};
+        for (const s of parsed.steps) stateByKey[s.key] = s;
+        const freshSteps = flattenSteps(fresh.steps);
+        for (const s of freshSteps) {
+          const old = stateByKey[s.key];
+          if (old) {
+            s.status = old.status || 'pending';
+            s.completedAt = old.completedAt || null;
+            s.contactedWith = Array.isArray(old.contactedWith) ? old.contactedWith : [];
+            s.naReason = old.naReason || '';
+          }
+        }
+        parsed.steps = freshSteps;
+      }
       if (!parsed.events) parsed.events = [];
       session = parsed;
     }

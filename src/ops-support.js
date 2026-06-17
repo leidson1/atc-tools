@@ -37,6 +37,8 @@ const FS_ID = 'ops-fullscreen';
 
 let session = null;
 let tickTimer = null;
+// Step que está com input de anotação aberto (UI state, não persiste).
+let editingNoteStepKey = null;
 
 // ============================================================
 // Ícones SVG (Lucide-like)
@@ -508,6 +510,20 @@ function renderSessionScreen(el) {
     card.querySelectorAll('.ops-step-contact').forEach((cb) => {
       cb.addEventListener('click', () => recordContact(key, cb.dataset.contact));
     });
+    // Anotações por passo
+    card.querySelector('.ops-step-note-add')?.addEventListener('click', () => startNoteEdit(key));
+    card.querySelector('.ops-step-note-save')?.addEventListener('click', () => saveNoteEdit(key));
+    card.querySelector('.ops-step-note-cancel')?.addEventListener('click', cancelNoteEdit);
+    const noteInput = card.querySelector('#ops-step-note-input');
+    if (noteInput) {
+      noteInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); saveNoteEdit(key); }
+        else if (e.key === 'Escape') { e.preventDefault(); cancelNoteEdit(); }
+      });
+    }
+    card.querySelectorAll('.ops-step-note-del').forEach((b) => {
+      b.addEventListener('click', () => removeStepNote(key, parseInt(b.dataset.noteIdx, 10)));
+    });
   });
   el.querySelectorAll('.ops-event-del').forEach((b) => {
     b.addEventListener('click', () => removeEvent(parseInt(b.dataset.idx, 10)));
@@ -531,6 +547,26 @@ function renderStepCard(s) {
       }).join('')}
     </div>` : '';
   const naLine = s.status === 'na' && s.naReason ? `<div class="ops-step-na-reason">N/A: ${escapeHTML(s.naReason)}</div>` : '';
+
+  // Anotações salvas neste passo
+  const notesBlock = (Array.isArray(s.notes) && s.notes.length) ? `
+    <div class="ops-step-notes">
+      ${s.notes.map((n, i) => `
+        <div class="ops-step-note">
+          <span class="ops-step-note-time">${fmtHHMM(n.ts)}</span>
+          <span class="ops-step-note-text">${escapeHTML(n.text)}</span>
+          <button type="button" class="ops-step-note-del" data-note-idx="${i}" title="Remover anotação">×</button>
+        </div>
+      `).join('')}
+    </div>` : '';
+
+  // Form inline pra adicionar nova anotação (quando este passo é o ativo)
+  const noteForm = editingNoteStepKey === s.key ? `
+    <div class="ops-step-note-form">
+      <input type="text" id="ops-step-note-input" placeholder="Anotação rápida sobre esta ação…" maxlength="240" autocomplete="off" />
+      <button type="button" class="ops-step-note-save">Salvar</button>
+      <button type="button" class="ops-step-note-cancel">Cancelar</button>
+    </div>` : '';
 
   let actions;
   if (isParent) {
@@ -573,6 +609,12 @@ function renderStepCard(s) {
     }
   }
 
+  // Botão discreto "Anotar" disponível em qualquer passo (não em modo edição)
+  const noteBtn = editingNoteStepKey === s.key
+    ? ''
+    : `<button type="button" class="ops-step-note-add" title="Adicionar anotação para este passo">${ICONS.pencil}<span>Anotar</span></button>`;
+  actions = actions + noteBtn;
+
   const klass = `ops-step ops-step-${s.status}${isParent ? ' ops-step-parent' : ''}${s.depth > 0 ? ' ops-step-child' : ''}`;
   return `
     <article class="${klass}" data-step-key="${escapeAttr(s.key)}" style="margin-left:${indent}px">
@@ -584,6 +626,8 @@ function renderStepCard(s) {
         </div>
         ${contactsRow}
         ${naLine}
+        ${notesBlock}
+        ${noteForm}
         <div class="ops-step-actions">${actions}</div>
       </div>
     </article>`;
@@ -680,6 +724,52 @@ function addEvent(text) {
   session.events.push({ ts: Date.now(), text });
   saveToStorage();
   refreshUI();
+}
+
+// === Anotações por passo ===
+function addStepNote(stepKey, rawText) {
+  const text = (rawText || '').trim();
+  if (!text) return;
+  const s = session.steps.find((x) => x.key === stepKey);
+  if (!s) return;
+  if (!Array.isArray(s.notes)) s.notes = [];
+  s.notes.push({ ts: Date.now(), text });
+  saveToStorage();
+  refreshUI();
+}
+
+function removeStepNote(stepKey, idx) {
+  const s = session.steps.find((x) => x.key === stepKey);
+  if (!s || !Array.isArray(s.notes) || !s.notes[idx]) return;
+  if (!window.confirm('Remover esta anotação?')) return;
+  s.notes.splice(idx, 1);
+  saveToStorage();
+  refreshUI();
+}
+
+function startNoteEdit(stepKey) {
+  editingNoteStepKey = stepKey;
+  refreshUI();
+  setTimeout(() => {
+    const input = document.getElementById('ops-step-note-input');
+    if (input) { input.focus(); input.select(); }
+  }, 30);
+}
+
+function cancelNoteEdit() {
+  editingNoteStepKey = null;
+  refreshUI();
+}
+
+function saveNoteEdit(stepKey) {
+  const input = document.getElementById('ops-step-note-input');
+  const text = input?.value || '';
+  editingNoteStepKey = null;
+  if (text.trim()) {
+    addStepNote(stepKey, text);
+  } else {
+    refreshUI();
+  }
 }
 
 function removeEvent(idx) {
@@ -826,6 +916,11 @@ function exportSession() {
       lines.push(`${ind}    Contatos: ${s.contactedWith.map((c) => `${c.tag} (${fmtHHMM(c.when)})`).join(', ')}`);
     }
     if (s.naReason) lines.push(`${ind}    N/A: ${s.naReason}`);
+    if (Array.isArray(s.notes) && s.notes.length) {
+      for (const n of s.notes) {
+        lines.push(`${ind}    Nota ${fmtHHMM(n.ts)} — ${n.text}`);
+      }
+    }
   }
   lines.push('');
   if (session.events.length) {
@@ -888,6 +983,7 @@ function loadFromStorage() {
             s.completedAt = old.completedAt || null;
             s.contactedWith = Array.isArray(old.contactedWith) ? old.contactedWith : [];
             s.naReason = old.naReason || '';
+            s.notes = Array.isArray(old.notes) ? old.notes : [];
           }
         }
         parsed.steps = freshSteps;

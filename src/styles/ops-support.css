@@ -114,6 +114,39 @@
 }
 .ops-fs-pdf:hover { filter: brightness(1.08); }
 
+/* === Cancelar sessão (header esquerdo) === */
+.ops-session-cancel {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--error) 35%, var(--border));
+  color: var(--error);
+  padding: 8px 12px; border-radius: 9px;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 700; font-size: 12px; letter-spacing: 0.2px;
+  cursor: pointer; transition: all var(--transition);
+}
+.ops-session-cancel:hover {
+  background: color-mix(in srgb, var(--error) 10%, transparent);
+  border-color: var(--error);
+}
+.ops-session-cancel svg { width: 14px; height: 14px; flex-shrink: 0; }
+@media (max-width: 720px) { .ops-session-cancel span { display: none; } .ops-session-cancel { padding: 8px 10px; } }
+
+/* === Reiniciar cronômetro (header direito, antes do clock) === */
+.ops-clock-reset {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 34px; height: 34px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: all var(--transition);
+}
+.ops-clock-reset:hover {
+  color: var(--ops-c); border-color: var(--ops-c);
+  transform: rotate(-45deg);
+}
+.ops-clock-reset svg { width: 16px; height: 16px; }
+
 /* === Barra de progresso === */
 .ops-fs-progress {
   position: sticky; top: calc(4px + 78px); z-index: 5000;

@@ -272,7 +272,17 @@ function flattenSteps(steps) {
   const walk = (arr, depth, parent) => {
     for (const s of arr || []) {
       const key = parent ? `${parent}.${s.n}` : String(s.n);
-      out.push({ key, n: s.n, text: s.text, contacts: s.contacts || [], depth });
+      // CRÍTICO: preservar parent e hasChildren — usados pra distinguir
+      // pais (sem botão Concluir, auto-conclui via filhos) de passos comuns.
+      out.push({
+        key,
+        n: s.n,
+        text: s.text,
+        contacts: s.contacts || [],
+        depth,
+        parent: parent || '',
+        hasChildren: !!(s.children && s.children.length),
+      });
       if (s.children) walk(s.children, depth + 1, key);
     }
   };
@@ -285,6 +295,38 @@ function flattenSteps(steps) {
     note: '',
     naReason: '',
   }));
+}
+
+// Detecção defensiva de pai: vê dinamicamente se há filho no array atual,
+// sem confiar apenas em hasChildren (que pode estar errado em sessões
+// salvas em versões antigas). Sempre verdade quando há child.
+function isParentStep(s) {
+  if (!s || !session) return false;
+  if (s.hasChildren) return true;
+  return session.steps.some((x) => x.parent === s.key);
+}
+
+// Recomputa o status de todos os pais a partir dos filhos. Roda na carga
+// e depois de qualquer mudança — assim sessões antigas em que o pai
+// ficou "done" indevidamente são corrigidas na hora.
+function recomputeAllParentStatuses() {
+  if (!session) return;
+  const parents = session.steps.filter((s) => isParentStep(s));
+  // Ordena do mais profundo pra raiz pra propagar conclusão em cadeia.
+  parents.sort((a, b) => b.depth - a.depth);
+  for (const p of parents) {
+    const children = session.steps.filter((x) => x.parent === p.key);
+    if (children.length === 0) continue;
+    const allDone = children.every((c) => c.status !== 'pending');
+    if (allDone && p.status === 'pending') {
+      p.status = 'done';
+      const stamps = children.filter((c) => c.completedAt).map((c) => c.completedAt);
+      p.completedAt = stamps.length ? Math.max(...stamps) : Date.now();
+    } else if (!allDone && p.status === 'done') {
+      p.status = 'pending';
+      p.completedAt = null;
+    }
+  }
 }
 
 function startSession(protocolId) {
@@ -476,8 +518,8 @@ function renderStepCard(s) {
   const indent = s.depth * 22;
   const icon = iconForStep(s.text);
   const stamp = s.completedAt ? fmtHHMMSS(s.completedAt) : '';
-  const isParent = s.hasChildren;
-  const withContacts = hasContacts(s);
+  const isParent = isParentStep(s);
+  const withContacts = hasContacts(s) && !isParent;
 
   const contactsRow = withContacts ? `
     <div class="ops-step-contacts">
@@ -620,7 +662,7 @@ function getChildren(parentKey) {
 function updateParentStatus(parentKey) {
   if (!parentKey) return;
   const parent = session.steps.find((s) => s.key === parentKey);
-  if (!parent || !parent.hasChildren) return;
+  if (!parent || !isParentStep(parent)) return;
   const children = getChildren(parentKey);
   if (children.length === 0) return;
   const allDone = children.every((c) => c.status !== 'pending');
@@ -852,6 +894,11 @@ function loadFromStorage() {
       }
       if (!parsed.events) parsed.events = [];
       session = parsed;
+      // Recalcula status dos pais — corrige sessões salvas em versões
+      // antigas onde o pai podia ter ficado "done" indevidamente, e
+      // garante consistência se os filhos foram alterados nesse meio tempo.
+      recomputeAllParentStatuses();
+      saveToStorage();
     }
   } catch (e) {}
 }

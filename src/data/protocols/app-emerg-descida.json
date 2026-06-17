@@ -9,9 +9,28 @@
   "estimated_steps": 4,
   "intro": "O APP-PJ deverá adotar imediatamente, todas as ações apropriadas para salvaguardar as aeronaves envolvidas quando se tiver conhecimento de que uma aeronave está efetuando uma descida de emergência. As seguintes ações podem, na ordem adequada a cada circunstância, incluir:",
   "steps": [
-    { "n": "a", "text": "emitir uma mensagem de emergência;" },
-    { "n": "b", "text": "emitir informação de tráfego e/ou instruções ATC para as aeronaves afetadas pela descida;" },
-    { "n": "c", "text": "informar a altitude mínima de voo e o ajuste do altímetro para a área em que esteja ocorrendo a descida." },
-    { "n": "d", "text": "Informar a situação à TWR-PJ caso possa ser afetada pela descida de emergência.", "contacts": ["TWR-PJ"] }
-  ]
+    {
+      "n": "a",
+      "text": "emitir uma mensagem de emergência;"
+    },
+    {
+      "n": "b",
+      "text": "emitir informação de tráfego e/ou instruções ATC para as aeronaves afetadas pela descida;"
+    },
+    {
+      "n": "c",
+      "text": "informar a altitude mínima de voo e o ajuste do altímetro para a área em que esteja ocorrendo a descida."
+    },
+    {
+      "n": "d",
+      "text": "Informar a situação à TWR-PJ caso possa ser afetada pela descida de emergência.",
+      "contacts": [
+        "TWR-PJ"
+      ]
+    }
+  ],
+  "pdf": {
+    "file": "modelo-app-emergencias.pdf",
+    "page": 2
+  }
 }

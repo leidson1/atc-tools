@@ -123,11 +123,9 @@ export function initOpsSupport() {
 }
 
 function openApoio() {
-  if (session && !session.finishedAt) {
-    openSessionScreen();
-  } else {
-    openCatalogScreen();
-  }
+  // Sempre vai pro catálogo. Se houver sessão em andamento, ela aparece
+  // como banner no topo — assim quem entra vê todas as opções e decide.
+  openCatalogScreen();
 }
 
 function getProtocol(id) { return PROTOCOLS[id] || null; }
@@ -176,11 +174,21 @@ function openCatalogScreen() {
       <div class="ops-fs-spacer"></div>
     </header>
     <div class="ops-fs-body">
+      ${renderActiveSessionBanner()}
       <p class="ops-fs-lead">Escolha o procedimento que se aplica. Ações marcadas <strong>carimbam horário</strong> automaticamente. Você também pode <strong>registrar acontecimentos</strong> livres na linha do tempo e abrir o <strong>PDF original</strong> a qualquer momento.</p>
       ${catalog.groups.map(renderGroupCard).join('')}
     </div>`;
 
   el.querySelector('#ops-fs-close')?.addEventListener('click', closeFullscreen);
+  el.querySelector('#ops-banner-resume')?.addEventListener('click', () => openSessionScreen());
+  el.querySelector('#ops-banner-discard')?.addEventListener('click', () => {
+    if (!window.confirm('Descartar este procedimento em andamento? Tudo que foi marcado será perdido.')) return;
+    session = null;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    const btn = document.getElementById('btn-open-apoio');
+    if (btn) btn.classList.remove('btn-apoio-active');
+    openCatalogScreen();
+  });
   el.querySelectorAll('[data-start]').forEach((b) => {
     b.addEventListener('click', () => startSession(b.dataset.start));
   });
@@ -190,6 +198,26 @@ function openCatalogScreen() {
       openPdfRef(a.dataset.pdf, parseInt(a.dataset.page || '1', 10));
     });
   });
+}
+
+function renderActiveSessionBanner() {
+  if (!session || session.finishedAt) return '';
+  const p = session.protocol;
+  const done = session.steps.filter((s) => s.status !== 'pending').length;
+  const total = session.steps.length;
+  return `
+    <div class="ops-active-banner ops-color-${p.color}">
+      <div class="ops-active-banner-stripe"></div>
+      <div class="ops-active-banner-body">
+        <div class="ops-active-banner-eyebrow">⚠ Procedimento em andamento</div>
+        <div class="ops-active-banner-title">${escapeHTML(p.title)}</div>
+        <div class="ops-active-banner-meta">${done} de ${total} ações · iniciado às ${fmtHHMMSS(session.startedAt)}${session.operator ? ' · ' + escapeHTML(session.operator) : ''}${session.position ? ' (' + escapeHTML(session.position) + ')' : ''}</div>
+      </div>
+      <div class="ops-active-banner-actions">
+        <button type="button" id="ops-banner-resume" class="ops-active-banner-resume">Retomar</button>
+        <button type="button" id="ops-banner-discard" class="ops-active-banner-discard">Descartar</button>
+      </div>
+    </div>`;
 }
 
 function renderGroupCard(group) {
@@ -262,6 +290,16 @@ function flattenSteps(steps) {
 function startSession(protocolId) {
   const protocol = getProtocol(protocolId);
   if (!protocol) return;
+  if (session && !session.finishedAt) {
+    if (session.protocol.id === protocolId) {
+      // Clicou no mesmo que já está em andamento — retoma
+      openSessionScreen();
+      return;
+    }
+    const cur = session.protocol.title;
+    if (!window.confirm(`Já existe um procedimento em andamento:\n\n  ${cur}\n\nDescartar esse procedimento e iniciar "${protocol.title}"?`)) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  }
   session = {
     protocol,
     startedAt: Date.now(),
@@ -357,6 +395,12 @@ function renderSessionScreen(el) {
         ${p.subtitle ? `<div class="ops-fs-sub">${escapeHTML(p.subtitle)}</div>` : ''}
       </div>
       <div class="ops-session-headside">
+        <button type="button" class="ops-operator-chip ${(session.operator || session.position) ? 'filled' : ''}" id="ops-operator-chip" title="Identificação do operador (clique para editar)">
+          ${ICONS.user}
+          <span>${(session.operator || session.position)
+            ? `${escapeHTML(session.operator || '—')}${session.position ? ' &nbsp;·&nbsp; <strong>' + escapeHTML(session.position) + '</strong>' : ''}`
+            : 'Identificar'}</span>
+        </button>
         <button type="button" class="ops-clock-reset" id="ops-clock-reset" title="Reiniciar cronômetro" aria-label="Reiniciar cronômetro">
           ${ICONS.rotateCcw}
         </button>
@@ -367,15 +411,6 @@ function renderSessionScreen(el) {
         ${pdfBtn}
       </div>
     </header>
-
-    <div class="ops-session-meta">
-      <button type="button" class="ops-operator-chip ${(session.operator || session.position) ? 'filled' : ''}" id="ops-operator-chip" title="Identificação do operador (clique para editar)">
-        ${ICONS.user}
-        <span>${(session.operator || session.position)
-          ? `${escapeHTML(session.operator || '—')}${session.position ? ' &nbsp;·&nbsp; <strong>' + escapeHTML(session.position) + '</strong>' : ''}`
-          : 'Identificar operador / posição'}</span>
-      </button>
-    </div>
 
     <div class="ops-fs-progress">
       <div class="ops-fs-progress-bar" style="width:${pct}%"></div>
@@ -441,8 +476,10 @@ function renderStepCard(s) {
   const indent = s.depth * 22;
   const icon = iconForStep(s.text);
   const stamp = s.completedAt ? fmtHHMMSS(s.completedAt) : '';
+  const isParent = s.hasChildren;
+  const withContacts = hasContacts(s);
 
-  const contactsRow = (s.contacts && s.contacts.length) ? `
+  const contactsRow = withContacts ? `
     <div class="ops-step-contacts">
       ${s.contacts.map((c) => {
         const rec = s.contactedWith.find((x) => x.tag === c);
@@ -452,19 +489,51 @@ function renderStepCard(s) {
       }).join('')}
     </div>` : '';
   const naLine = s.status === 'na' && s.naReason ? `<div class="ops-step-na-reason">N/A: ${escapeHTML(s.naReason)}</div>` : '';
+
   let actions;
-  if (s.status === 'done') {
-    actions = `<span class="ops-step-stamp ops-step-stamp-done">${ICONS.check}<span>${stamp}</span></span>
-               <button type="button" class="ops-step-btn-undo">Desfazer</button>`;
-  } else if (s.status === 'na') {
-    actions = `<span class="ops-step-stamp ops-step-stamp-na">⊘ N/A</span>
-               <button type="button" class="ops-step-btn-undo">Desfazer</button>`;
+  if (isParent) {
+    // Item pai: nunca tem botão Concluir manual; auto-conclui via filhos.
+    const children = getChildren(s.key);
+    const doneN = children.filter((c) => c.status !== 'pending').length;
+    if (s.status === 'done') {
+      actions = `<span class="ops-step-stamp ops-step-stamp-done">${ICONS.check}<span>${stamp}</span></span>
+                 <small class="ops-step-progress">${doneN}/${children.length} subitens concluídos</small>`;
+    } else {
+      actions = `<small class="ops-step-progress">▾ ${doneN} de ${children.length} subitens · conclui-se automaticamente</small>`;
+    }
+  } else if (withContacts) {
+    // Tem contatos: clicar nos chips já conclui — sem botão manual.
+    if (s.status === 'done') {
+      actions = `<span class="ops-step-stamp ops-step-stamp-done">${ICONS.check}<span>${stamp}</span></span>
+                 <button type="button" class="ops-step-btn-undo">Desfazer</button>`;
+    } else if (s.status === 'na') {
+      actions = `<span class="ops-step-stamp ops-step-stamp-na">⊘ N/A</span>
+                 <button type="button" class="ops-step-btn-undo">Desfazer</button>`;
+    } else {
+      const remaining = s.contacts.length - s.contactedWith.length;
+      const msg = remaining === s.contacts.length
+        ? `Clique nos contatos acima conforme acioná-los — conclui automaticamente`
+        : `Faltam ${remaining} de ${s.contacts.length} contatos`;
+      actions = `<small class="ops-step-progress">${msg}</small>
+                 <button type="button" class="ops-step-btn-na">N/A</button>`;
+    }
   } else {
-    actions = `<button type="button" class="ops-step-btn-done">${ICONS.check}<span>Concluir</span></button>
-               <button type="button" class="ops-step-btn-na">N/A</button>`;
+    // Comum (sem filhos, sem contatos): botão Concluir manual
+    if (s.status === 'done') {
+      actions = `<span class="ops-step-stamp ops-step-stamp-done">${ICONS.check}<span>${stamp}</span></span>
+                 <button type="button" class="ops-step-btn-undo">Desfazer</button>`;
+    } else if (s.status === 'na') {
+      actions = `<span class="ops-step-stamp ops-step-stamp-na">⊘ N/A</span>
+                 <button type="button" class="ops-step-btn-undo">Desfazer</button>`;
+    } else {
+      actions = `<button type="button" class="ops-step-btn-done">${ICONS.check}<span>Concluir</span></button>
+                 <button type="button" class="ops-step-btn-na">N/A</button>`;
+    }
   }
+
+  const klass = `ops-step ops-step-${s.status}${isParent ? ' ops-step-parent' : ''}${s.depth > 0 ? ' ops-step-child' : ''}`;
   return `
-    <article class="ops-step ops-step-${s.status}" data-step-key="${escapeAttr(s.key)}" style="margin-left:${indent}px">
+    <article class="${klass}" data-step-key="${escapeAttr(s.key)}" style="margin-left:${indent}px">
       <div class="ops-step-icon">${icon}</div>
       <div class="ops-step-body">
         <div class="ops-step-head">
@@ -492,6 +561,7 @@ function toggleStep(key, newStatus) {
   s.status = newStatus;
   s.completedAt = newStatus === 'pending' ? null : Date.now();
   if (newStatus !== 'na') s.naReason = '';
+  updateParentStatus(s.parent);
   saveToStorage();
   refreshUI();
 }
@@ -504,6 +574,7 @@ function promptNa(key) {
   s.status = 'na';
   s.naReason = reason || '';
   s.completedAt = Date.now();
+  updateParentStatus(s.parent);
   saveToStorage();
   refreshUI();
 }
@@ -512,10 +583,49 @@ function recordContact(stepKey, tag) {
   const s = session.steps.find((x) => x.key === stepKey);
   if (!s) return;
   const existing = s.contactedWith.find((x) => x.tag === tag);
-  if (existing) s.contactedWith = s.contactedWith.filter((x) => x.tag !== tag);
-  else s.contactedWith.push({ tag, when: Date.now() });
+  if (existing) {
+    s.contactedWith = s.contactedWith.filter((x) => x.tag !== tag);
+  } else {
+    s.contactedWith.push({ tag, when: Date.now() });
+  }
+  // Se todos os contatos foram clicados, auto-conclui
+  if (s.status === 'pending' && allContactsDone(s)) {
+    s.status = 'done';
+    s.completedAt = Date.now();
+  } else if (s.status === 'done' && hasContacts(s) && !allContactsDone(s)) {
+    s.status = 'pending';
+    s.completedAt = null;
+  }
+  updateParentStatus(s.parent);
   saveToStorage();
   refreshUI();
+}
+
+function hasContacts(s) { return s.contacts && s.contacts.length > 0; }
+function allContactsDone(s) {
+  if (!hasContacts(s)) return false;
+  return s.contacts.every((c) => s.contactedWith.find((x) => x.tag === c));
+}
+
+function getChildren(parentKey) {
+  return session.steps.filter((x) => x.parent === parentKey);
+}
+
+function updateParentStatus(parentKey) {
+  if (!parentKey) return;
+  const parent = session.steps.find((s) => s.key === parentKey);
+  if (!parent || !parent.hasChildren) return;
+  const children = getChildren(parentKey);
+  if (children.length === 0) return;
+  const allDone = children.every((c) => c.status !== 'pending');
+  if (allDone && parent.status === 'pending') {
+    parent.status = 'done';
+    parent.completedAt = Date.now();
+  } else if (!allDone && parent.status === 'done') {
+    parent.status = 'pending';
+    parent.completedAt = null;
+  }
+  updateParentStatus(parent.parent);
 }
 
 function addEvent(text) {
@@ -558,17 +668,61 @@ function updateClock() {
 // ============================================================
 function finishSession() {
   if (!session) return;
-  if (!window.confirm('Finalizar e exportar este evento?\n\nA sessão será encerrada e você volta pro catálogo, pronto pra próxima.')) return;
-  session.finishedAt = Date.now();
-  saveToStorage();
-  exportSession();
-  // Limpa pra próxima — sessão encerrada, tudo zerado
-  session = null;
-  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-  stopTicker();
-  const btn = document.getElementById('btn-open-apoio');
-  if (btn) btn.classList.remove('btn-apoio-active');
-  openCatalogScreen();
+  const pending = session.steps.filter((s) => s.status === 'pending');
+  showFinishModal(pending);
+}
+
+function showFinishModal(pending) {
+  const old = document.getElementById('ops-finish-modal');
+  if (old) old.remove();
+  const modal = document.createElement('div');
+  modal.id = 'ops-finish-modal';
+  modal.className = 'ops-identify-modal';
+  const list = pending.length === 0
+    ? '<p class="ops-finish-allgood">✓ Todas as ações foram concluídas ou marcadas como Não Aplicáveis.</p>'
+    : `<div class="ops-finish-pending">
+         <div class="ops-finish-warn">⚠ Ainda há <strong>${pending.length}</strong> ação${pending.length === 1 ? '' : 'ões'} pendente${pending.length === 1 ? '' : 's'}:</div>
+         <ul class="ops-finish-pending-list">
+           ${pending.slice(0, 8).map((s) => `<li><span class="ops-finish-num">${escapeHTML(String(s.n))}</span> ${escapeHTML(s.text.length > 110 ? s.text.slice(0, 107) + '…' : s.text)}</li>`).join('')}
+           ${pending.length > 8 ? `<li class="ops-finish-more">… e mais ${pending.length - 8}</li>` : ''}
+         </ul>
+       </div>`;
+  modal.innerHTML = `
+    <div class="ops-identify-card ops-color-${session.protocol.color}">
+      <div class="ops-identify-header">
+        <div class="ops-identify-icon">${ICONS.check}</div>
+        <div>
+          <h3>Finalizar evento</h3>
+          <p>O registro vai ser exportado em <strong>.txt</strong> e a sessão será encerrada para começar uma nova.</p>
+        </div>
+      </div>
+      ${list}
+      <div class="ops-identify-actions">
+        <button type="button" class="ops-identify-skip" id="ops-finish-cancel">Voltar</button>
+        <button type="button" class="ops-finish-export-now" id="ops-finish-export">Exportar sem finalizar</button>
+        <button type="button" class="ops-identify-confirm" id="ops-finish-confirm">${pending.length ? 'Finalizar mesmo assim' : 'Finalizar e exportar'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  const close = () => modal.remove();
+  modal.querySelector('#ops-finish-cancel').addEventListener('click', close);
+  modal.querySelector('#ops-finish-export').addEventListener('click', () => {
+    exportSession();
+    close();
+  });
+  modal.querySelector('#ops-finish-confirm').addEventListener('click', () => {
+    session.finishedAt = Date.now();
+    saveToStorage();
+    exportSession();
+    session = null;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    stopTicker();
+    const btn = document.getElementById('btn-open-apoio');
+    if (btn) btn.classList.remove('btn-apoio-active');
+    close();
+    openCatalogScreen();
+  });
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
 }
 
 function cancelSession() {

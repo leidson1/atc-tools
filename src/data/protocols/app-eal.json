@@ -1,0 +1,19 @@
+{
+  "id": "app-eal",
+  "category": "app-emergencias",
+  "color": "orange",
+  "source": "MODELO APP PJ 2024/01 — 7.1.2 PROCEDIMENTOS PARA AERONAVES EMPREGANDO SISTEMA DE POUSO AUTOMÁTICO DE EMERGÊNCIA (EAL)",
+  "version": "2024/01",
+  "title": "EAL — Emergency Autoland System",
+  "subtitle": "Aeronave empregando Sistema de Pouso Automático de Emergência",
+  "estimated_steps": 7,
+  "intro": "O ATCO deverá ter ciência dos procedimentos previstos na MCA 100-15 sobre procedimentos relativos às aeronaves empregando um Sistema de Pouso Automático de Emergência (EAL, Emergency Autoland System).",
+  "steps": [
+    { "n": "1", "text": "O APP-PJ ao tomar conhecimento ou receber reporte de aeronave empregando um sistema de pouso automático de emergência (EAL), deverá imediatamente emitir informação de tráfego e/ou instruções ATC para as outras aeronaves afetadas pelo trajeto do voo da aeronave que esteja empregando um Sistema de Pouso Automático de Emergência." },
+    { "n": "2", "text": "O sistema seleciona a última frequência utilizada pela tripulação, e caso esteja ocupada no momento da transmissão do sistema de pouso automático de emergência, tal frequência poderá ser evitada pelo sistema, passando a utilizar a frequência de emergência (121.50 MHz) e de coordenação de aeronaves (FCA)." },
+    { "n": "3", "text": "O APP PJ deverá informar a situação a TWR PJ ou outros órgãos ATS que possam ser afetados pela aeronave que esteja empregando o sistema.", "contacts": ["TWR-PJ", "Outros ATS"] },
+    { "n": "4", "text": "O APP PJ deverá coordenar a reserva de pista com a TWR PJ, caso o aeródromo de SBPJ tenha sido selecionado para o pouso.", "contacts": ["TWR-PJ"] },
+    { "n": "5", "text": "A aeronave passará a transmitir na frequência da TWR/AFIS quando estiver a 12NM do aeródromo selecionado para o pouso e abaixo do FL100." },
+    { "n": "6", "text": "Periodicamente, aproximadamente a cada cinco minutos, haverá a retransmissão das informações." }
+  ]
+}

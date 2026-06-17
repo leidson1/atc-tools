@@ -2,6 +2,7 @@ import './styles/main.css';
 import './styles/panel.css';
 import './styles/map.css';
 import './styles/components.css';
+import './styles/ops-support.css';
 
 import { calculateRdl, getAerodromeInfo } from './api.js';
 import { clearTrajectory, initMap, setAerodrome, showRdlOnMap } from './map.js';
@@ -15,6 +16,8 @@ import { initDrawer } from './drawer.js';
 import { initVersionIndicator } from './version-indicator.js';
 import { initTrajectory, runOperation, setOperationBase, setOperationToRadialMode } from './trajectory.js';
 import { initAerodromeLayer, toggleAerodromeLayer } from './aerodrome-layer.js';
+import { initLiveTraffic, toggleLiveTraffic } from './live-traffic.js';
+import { initOpsSupport } from './ops-support.js';
 
 // App state
 let baseAerodrome = null;
@@ -30,6 +33,10 @@ async function init() {
   // Initialize airspace layers
   initAirspaceLayers(map);
   initAerodromeLayer(map);
+  initLiveTraffic(map);
+
+  // Initialize operations support module (checklists)
+  initOpsSupport();
 
   // Initialize settings
   initSettings(onSettingsSave);
@@ -63,6 +70,15 @@ async function init() {
   adBtn?.addEventListener('click', () => {
     adBtn.classList.toggle('active', toggleAerodromeLayer());
   });
+
+  // Live traffic layer toggle (OpenSky Network)
+  const trfBtn = document.getElementById('btn-toggle-trf');
+  trfBtn?.addEventListener('click', () => {
+    trfBtn.classList.toggle('active', toggleLiveTraffic());
+  });
+
+  // Aircraft "use as target" → reaproveita o handler de clique no mapa
+  window.__onTargetClick = (lat, lon) => onMapClick(lat, lon);
 
   // History click handler
   window.__onHistoryClick = (result) => {

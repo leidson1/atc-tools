@@ -1,0 +1,49 @@
+{
+  "id": "app-acidente",
+  "category": "app-acidente",
+  "color": "purple",
+  "source": "MODELO APP PJ 2024/01 — 7.3.1 AÇÕES ADOTADAS EM CASO DE ACIDENTES E INCIDENTES AERONÁUTICOS",
+  "version": "2024/01",
+  "title": "Acidente / Incidente Aeronáutico",
+  "subtitle": "Ocorrência na área de jurisdição do APP-PJ",
+  "estimated_steps": 9,
+  "intro": "Sempre que ocorrer um acidente/incidente aeronáutico na área de jurisdição do APP-PJ, os controladores de serviço deverão adotar as seguintes ações:",
+  "steps": [
+    { "n": "pré-1", "text": "Se for previsível que o incidente/acidente ocorra ou tenha ocorrido no Aeroporto de Palmas ou dentro de 08km do Aeroporto de Palmas: Notificar, imediatamente a Torre Palmas para acionar o sistema de alarme da SCI (sirene).", "contacts": ["TWR-PJ (SCI)"] },
+    { "n": "pré-2", "text": "Se for previsível que o incidente/acidente ocorra ou tenha ocorrido fora de 08km do Aeroporto de Palmas: notificar, imediatamente, os serviços de resgate e segurança pública via 193 e 190.", "contacts": ["193 Bombeiros", "190 Polícia"] },
+    { "n": "1", "text": "DURANTE AFIS - ACIONAR O SISTEMA DE ALARME DA SCI (SIRENE)", "contacts": ["SCI"] },
+    { "n": "2", "text": "Realizar gerenciamento de fluxo (alternar aeronaves) na TMA-PJ, se necessário;" },
+    { "n": "3", "text": "Informar imediatamente, via telefones operacionais e/ou TF-2:", "children": [
+      { "n": "a", "text": "TWR-PJ (informar pessoalmente);", "contacts": ["TWR-PJ"] },
+      { "n": "b", "text": "ACC BS;", "contacts": ["ACC-BS"] },
+      { "n": "c", "text": "ACC AZ;", "contacts": ["ACC-AZ"] },
+      { "n": "d", "text": "CGNA.", "contacts": ["CGNA"] }
+    ]},
+    { "n": "4", "text": "Informar imediatamente, via telefones operacionais:", "children": [
+      { "n": "a", "text": "EMS PJ para providenciar Observação Meteorológica Local, se no aeroporto ou imediações.", "contacts": ["EMS-PJ"] }
+    ]},
+    { "n": "5", "text": "Comunicar o mais rápido possível, via telefones operacionais e/ou TF-2, ao:", "children": [
+      { "n": "a", "text": "GEIV;", "contacts": ["GEIV"], "children": [
+        { "n": "i", "text": "Não permitir ajustes ou modificações nos auxílios à navegação aérea;" }
+      ]},
+      { "n": "b", "text": "RCC BS;", "contacts": ["RCC-BS"] },
+      { "n": "c", "text": "SIPACEA-1 (Brasília);", "contacts": ["SIPACEA-1"] },
+      { "n": "d", "text": "Comandante do CINDACTA 1;", "contacts": ["Cmt CINDACTA 1"] },
+      { "n": "e", "text": "SERIPA 6, ou CENIPA (em se tratando de aeronave de transporte regular);", "contacts": ["SERIPA-6", "CENIPA"] },
+      { "n": "f", "text": "DNPJ e DNPJ-1, se na ausência destes a NASE, se na ausência destes a DONA.", "contacts": ["DNPJ", "DNPJ-1", "NASE", "DONA"] }
+    ]},
+    { "n": "6", "text": "Informar, aos contatos acima:", "children": [
+      { "n": "a", "text": "Tipo e matrícula da(s) aeronave(s) envolvida(s) no acidente/incidente;" },
+      { "n": "b", "text": "Data e hora do acidente/incidente;" },
+      { "n": "c", "text": "Fase do voo em que ocorreu o acidente/incidente;" },
+      { "n": "d", "text": "Condições meteorológicas na hora da ocorrência;" },
+      { "n": "e", "text": "Regras de voo segundo as quais voava(m) a(s) aeronave(s) envolvida(s);" },
+      { "n": "f", "text": "Auxílios visuais à navegação aérea em operação na hora da ocorrência, que pudessem estar sendo utilizados pela(s) aeronave(s) envolvida(s);" },
+      { "n": "g", "text": "Procedimento de tráfego aéreo que a aeronave acidentada pudesse estar utilizando;" },
+      { "n": "h", "text": "Equipamentos de radionavegação de bordo da(s) aeronave(s), lançados no plano de voo." }
+    ]},
+    { "n": "7", "text": "Preencher FNCO no site do CENIPA;" },
+    { "n": "8", "text": "Preencher no LRO todos os dados da ocorrência bem como todos os acionamentos e horários para registro e posterior investigação." },
+    { "n": "9", "text": "Preservar todos os registros e informações, tais como FPV, LRO, dentre outros, e FPV manuais, se houver, para uso em investigações, busca e salvamento, controle de tráfego aéreo e treinamento." }
+  ]
+}

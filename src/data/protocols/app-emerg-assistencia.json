@@ -1,0 +1,77 @@
+{
+  "id": "app-emerg-assistencia",
+  "category": "app-emergencias",
+  "color": "orange",
+  "source": "MODELO APP PJ 2024/01 — 7.1.1 ASSISTÊNCIA ÀS AERONAVES EM EMERGÊNCIA",
+  "version": "2024/01",
+  "title": "Assistência às aeronaves em emergência",
+  "subtitle": "Aplicado quando uma aeronave se declarar em emergência",
+  "estimated_steps": 5,
+  "intro": "As várias circunstâncias que envolvem cada situação de emergência impedem o estabelecimento de procedimentos exatos e detalhados a serem seguidos. Os operadores devem estar familiarizados com conhecimentos e procedimentos técnicos básicos de operação de aeronaves para prestar a melhor assistência possível à aeronave. Os operadores devem estar familiarizados com o Plano de Emergências Aeronáuticas do Aeroporto de Palmas (PLEM SBPJ).",
+  "steps": [
+    {
+      "n": "a",
+      "text": "Identificar:",
+      "children": [
+        { "n": "i", "text": "tipo de aeronave;" },
+        { "n": "ii", "text": "tipo de emergência;" },
+        { "n": "iii", "text": "intenções da tripulação de voo;" },
+        { "n": "iv", "text": "posição e nível da aeronave;" },
+        { "n": "v", "text": "Se possível, autonomia remanescente, pessoas a bordo e se há carga perigosa;" }
+      ]
+    },
+    {
+      "n": "b",
+      "text": "Notificar a TWR-PJ para acionar a SCI via sistema de alarme (sirene) e ao APOC, e repassar a TWR-PJ, quando necessário:",
+      "contacts": ["TWR-PJ", "APOC"],
+      "children": [
+        { "n": "i", "text": "tipo da aeronave;" },
+        { "n": "ii", "text": "tipo de emergência;" },
+        { "n": "iii", "text": "cabeceira a ser utilizada e estimado para pouso." }
+      ]
+    },
+    {
+      "n": "b2",
+      "text": "Se durante prestação do AFIS, acionar a SCI via sistema de alarme (sirene)",
+      "contacts": ["SCI"],
+      "children": [
+        { "n": "i", "text": "Posicionamento para Intervenção: 03 toques contínuos de 05 segundos a cada 05 segundos;" },
+        { "n": "ii", "text": "Intervenção Imediata: 01 toque contínuo de 15 segundos;" },
+        { "n": "iii", "text": "Notificar ao APOC via Hot-line" }
+      ]
+    },
+    {
+      "n": "b2.2",
+      "text": "Assim que os Carros Contra Incêndio (CCI) notificarem prontos para atendimento, informar via rádio UHF:",
+      "contacts": ["CCI"],
+      "children": [
+        { "n": "i", "text": "tipo da aeronave;" },
+        { "n": "ii", "text": "tipo de emergência;" },
+        { "n": "iii", "text": "cabeceira a ser utilizada e estimado para pouso." },
+        { "n": "iv", "text": "Autorizar, conforme o caso, o posicionamento para intervenção ou a intervenção imediata" }
+      ]
+    },
+    {
+      "n": "c",
+      "text": "Notificar, via telefones operacionais e/ou TF-2:",
+      "contacts": ["ACC-BS", "ACC-AZ", "CGNA", "DNPJ", "DNPJ-1", "SERIPA-6"],
+      "children": [
+        { "n": "i", "text": "ACC-BS;" },
+        { "n": "ii", "text": "ACC-AZ;" },
+        { "n": "iii", "text": "CGNA;" },
+        { "n": "iv", "text": "DNPJ e DNPJ-1;" },
+        { "n": "v", "text": "SERIPA-6." }
+      ]
+    },
+    {
+      "n": "7.1.1.4",
+      "text": "Durante a prestação do AFIS no Aeroporto de Palmas (SBPJ), o APP-PJ, após obter todos os dados referente a emergência, em estreita coordenação com o APOC (Administração Aeroportuária), deverá avaliar a necessidade de suspender as operações do Aeroporto de Palmas, realizando a Reserva de Pista, como medida preventiva, até o completo pouso da aeronave em emergência, devendo ser observado, com apoio dos itens abaixo, exemplificativos e não taxativos.",
+      "contacts": ["APOC"],
+      "children": [
+        { "n": "a", "text": "Nos casos de URGÊNCIA, onde se puder manter o voo seguro, normalmente não haverá necessidade de suspender as operações em SBPJ com antecedência maior que a estabelecida pelo operador do aeródromo, se houver." },
+        { "n": "b", "text": "Avaliar o tipo de aeronave e se é possível realizar o pouso com segurança em outro aeródromo da TMA ou nas proximidades. Para as aeronaves cuja única alternativa é pousar no SBPJ deve-se avaliar a necessidade da reserva de pista." },
+        { "n": "c", "text": "Nos casos de SOCORRO, como a aeronave encontra-se ameaçada por um grave e/ou iminente perigo, deve-se considerar o tipo específico de cada emergência, estrutura física, condições operacionais e meteorológicas do aeródromo, para realizar a reserva de pista." }
+      ]
+    }
+  ]
+}

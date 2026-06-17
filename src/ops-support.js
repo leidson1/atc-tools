@@ -50,6 +50,8 @@ const ICONS = {
   pdf:         I('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/>'),
   plus:        I('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'),
   pin:         I('<path d="M12 22s-7-5.5-7-12a7 7 0 0 1 14 0c0 6.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/>'),
+  rotateCcw:   I('<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>'),
+  trash:       I('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'),
   clipboard:   I('<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/>'),
   download:    I('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'),
   // grupos do catálogo
@@ -287,8 +289,11 @@ function renderSessionScreen(el) {
 
   el.innerHTML = `
     <header class="ops-fs-header ops-session-fs-header">
-      <button class="ops-fs-back" type="button" id="ops-fs-back" aria-label="Voltar ao catálogo">
+      <button class="ops-fs-back" type="button" id="ops-fs-back" aria-label="Voltar ao catálogo (mantém sessão)">
         ${ICONS.back}<span>Catálogo</span>
+      </button>
+      <button class="ops-session-cancel" type="button" id="ops-cancel-btn" title="Cancelar este procedimento (descarta tudo)" aria-label="Cancelar procedimento">
+        ${ICONS.trash}<span>Cancelar</span>
       </button>
       <div class="ops-fs-title">
         <span class="ops-fs-eyebrow">${escapeHTML(p.source)}</span>
@@ -296,6 +301,9 @@ function renderSessionScreen(el) {
         ${p.subtitle ? `<div class="ops-fs-sub">${escapeHTML(p.subtitle)}</div>` : ''}
       </div>
       <div class="ops-session-headside">
+        <button type="button" class="ops-clock-reset" id="ops-clock-reset" title="Reiniciar cronômetro" aria-label="Reiniciar cronômetro">
+          ${ICONS.rotateCcw}
+        </button>
         <div class="ops-session-clock">
           <span class="ops-session-clock-elapsed" id="ops-clock-elapsed">00:00</span>
           <span class="ops-session-clock-start">início ${fmtHHMMSS(session.startedAt)}</span>
@@ -338,6 +346,8 @@ function renderSessionScreen(el) {
     </footer>`;
 
   el.querySelector('#ops-fs-back')?.addEventListener('click', () => openCatalogScreen());
+  el.querySelector('#ops-cancel-btn')?.addEventListener('click', cancelSession);
+  el.querySelector('#ops-clock-reset')?.addEventListener('click', resetClock);
   el.querySelector('.ops-fs-pdf')?.addEventListener('click', () => openPdfRef(pdf.file, pdf.page));
   el.querySelector('#ops-export-btn')?.addEventListener('click', exportSession);
   el.querySelector('#ops-finish-btn')?.addEventListener('click', finishSession);
@@ -486,6 +496,26 @@ function finishSession() {
   session.finishedAt = Date.now();
   saveToStorage();
   exportSession();
+}
+
+function cancelSession() {
+  if (!session) return;
+  if (!window.confirm('Cancelar este procedimento? Tudo que foi marcado será descartado e não dá pra desfazer.')) return;
+  session = null;
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  stopTicker();
+  const btn = document.getElementById('btn-open-apoio');
+  if (btn) btn.classList.remove('btn-apoio-active');
+  openCatalogScreen();
+}
+
+function resetClock() {
+  if (!session) return;
+  if (!window.confirm('Reiniciar o cronômetro a partir de agora?\n\nOs horários já carimbados nas ações e nos acontecimentos serão mantidos (são horários reais UTC). Só o tempo "decorrido" zera.')) return;
+  session.startedAt = Date.now();
+  saveToStorage();
+  updateClock();
+  refreshUI();
 }
 
 function exportSession() {

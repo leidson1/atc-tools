@@ -52,6 +52,7 @@ const ICONS = {
   pin:         I('<path d="M12 22s-7-5.5-7-12a7 7 0 0 1 14 0c0 6.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/>'),
   rotateCcw:   I('<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>'),
   trash:       I('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'),
+  user:        I('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'),
   clipboard:   I('<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/>'),
   download:    I('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'),
   // grupos do catálogo
@@ -265,6 +266,9 @@ function startSession(protocolId) {
     protocol,
     startedAt: Date.now(),
     finishedAt: null,
+    operator: '',
+    position: '',
+    identified: false,
     steps: flattenSteps(protocol.steps),
     events: [],
   };
@@ -278,6 +282,58 @@ function openSessionScreen() {
   el.className = `ops-fullscreen ops-color-${session.protocol.color}`;
   renderSessionScreen(el);
   startTicker();
+  if (!session.identified) showIdentifyModal();
+}
+
+const POSITIONS = ['TWR', 'AFIS', 'APP', 'ACC', 'Chefe do Órgão', 'Outro'];
+
+function showIdentifyModal() {
+  if (!session) return;
+  const old = document.getElementById('ops-identify-modal');
+  if (old) old.remove();
+  const modal = document.createElement('div');
+  modal.id = 'ops-identify-modal';
+  modal.className = 'ops-identify-modal';
+  modal.innerHTML = `
+    <div class="ops-identify-card ops-color-${session.protocol.color}">
+      <div class="ops-identify-header">
+        <div class="ops-identify-icon">${ICONS.user}</div>
+        <div>
+          <h3>Quem está conduzindo este procedimento?</h3>
+          <p>Tudo opcional — entra no registro exportado quando você finalizar. Pode <strong>Pular</strong> e preencher depois.</p>
+        </div>
+      </div>
+      <label class="ops-identify-field">
+        <span>Nome ou iniciais</span>
+        <input type="text" id="ops-id-name" value="${escapeAttr(session.operator || '')}" placeholder="Ex.: J. Silva" maxlength="60" autocomplete="off" />
+      </label>
+      <label class="ops-identify-field">
+        <span>Posição operacional</span>
+        <select id="ops-id-pos">
+          <option value="">— selecione —</option>
+          ${POSITIONS.map((p) => `<option value="${escapeAttr(p)}"${p === session.position ? ' selected' : ''}>${escapeHTML(p)}</option>`).join('')}
+        </select>
+      </label>
+      <div class="ops-identify-actions">
+        <button type="button" class="ops-identify-skip" id="ops-id-skip">Pular</button>
+        <button type="button" class="ops-identify-confirm" id="ops-id-confirm">Confirmar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  const finish = (save) => {
+    if (save) {
+      session.operator = modal.querySelector('#ops-id-name').value.trim();
+      session.position = modal.querySelector('#ops-id-pos').value;
+    }
+    session.identified = true;
+    saveToStorage();
+    modal.remove();
+    refreshUI();
+  };
+  modal.querySelector('#ops-id-confirm').addEventListener('click', () => finish(true));
+  modal.querySelector('#ops-id-skip').addEventListener('click', () => finish(false));
+  modal.addEventListener('click', (e) => { if (e.target === modal) finish(false); });
+  setTimeout(() => modal.querySelector('#ops-id-name')?.focus(), 50);
 }
 
 function renderSessionScreen(el) {
@@ -311,6 +367,15 @@ function renderSessionScreen(el) {
         ${pdfBtn}
       </div>
     </header>
+
+    <div class="ops-session-meta">
+      <button type="button" class="ops-operator-chip ${(session.operator || session.position) ? 'filled' : ''}" id="ops-operator-chip" title="Identificação do operador (clique para editar)">
+        ${ICONS.user}
+        <span>${(session.operator || session.position)
+          ? `${escapeHTML(session.operator || '—')}${session.position ? ' &nbsp;·&nbsp; <strong>' + escapeHTML(session.position) + '</strong>' : ''}`
+          : 'Identificar operador / posição'}</span>
+      </button>
+    </div>
 
     <div class="ops-fs-progress">
       <div class="ops-fs-progress-bar" style="width:${pct}%"></div>
@@ -348,6 +413,7 @@ function renderSessionScreen(el) {
   el.querySelector('#ops-fs-back')?.addEventListener('click', () => openCatalogScreen());
   el.querySelector('#ops-cancel-btn')?.addEventListener('click', cancelSession);
   el.querySelector('#ops-clock-reset')?.addEventListener('click', resetClock);
+  el.querySelector('#ops-operator-chip')?.addEventListener('click', showIdentifyModal);
   el.querySelector('.ops-fs-pdf')?.addEventListener('click', () => openPdfRef(pdf.file, pdf.page));
   el.querySelector('#ops-export-btn')?.addEventListener('click', exportSession);
   el.querySelector('#ops-finish-btn')?.addEventListener('click', finishSession);
@@ -492,10 +558,17 @@ function updateClock() {
 // ============================================================
 function finishSession() {
   if (!session) return;
-  if (!window.confirm('Finalizar este evento? O resumo ficará disponível para exportação.')) return;
+  if (!window.confirm('Finalizar e exportar este evento?\n\nA sessão será encerrada e você volta pro catálogo, pronto pra próxima.')) return;
   session.finishedAt = Date.now();
   saveToStorage();
   exportSession();
+  // Limpa pra próxima — sessão encerrada, tudo zerado
+  session = null;
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  stopTicker();
+  const btn = document.getElementById('btn-open-apoio');
+  if (btn) btn.classList.remove('btn-apoio-active');
+  openCatalogScreen();
 }
 
 function cancelSession() {
@@ -531,6 +604,9 @@ function exportSession() {
   lines.push(`Fonte:      ${p.source}`);
   if (p.version) lines.push(`Versão:     ${p.version}`);
   lines.push('');
+  if (session.operator) lines.push(`Operador:   ${session.operator}`);
+  if (session.position) lines.push(`Posição:    ${session.position}`);
+  if (session.operator || session.position) lines.push('');
   lines.push(`Início:     ${fmtFullDate(session.startedAt)}`);
   if (session.finishedAt) {
     lines.push(`Fim:        ${fmtFullDate(session.finishedAt)}`);

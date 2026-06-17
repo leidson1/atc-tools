@@ -147,6 +147,101 @@
 }
 .ops-clock-reset svg { width: 16px; height: 16px; }
 
+/* === Linha de meta (chip do operador) === */
+.ops-session-meta {
+  background: var(--bg-secondary);
+  padding: 6px 22px 4px;
+}
+.ops-operator-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--bg-card); border: 1px dashed var(--border);
+  color: var(--text-muted);
+  padding: 5px 10px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 700;
+  cursor: pointer; transition: all var(--transition);
+}
+.ops-operator-chip:hover { color: var(--ops-c); border-color: var(--ops-c); }
+.ops-operator-chip svg { width: 13px; height: 13px; }
+.ops-operator-chip.filled {
+  background: var(--ops-tint); border-style: solid;
+  border-color: var(--ops-tint-strong); color: var(--ops-c);
+}
+.ops-operator-chip.filled strong { font-weight: 800; }
+.ops-operator-chip span { white-space: nowrap; }
+
+@media (max-width: 720px) { .ops-session-meta { padding: 5px 14px 0; } }
+
+/* === Modal de identificação === */
+.ops-identify-modal {
+  position: fixed; inset: 0; z-index: 5500;
+  background: rgba(15, 22, 38, 0.55);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: opsFadeIn 0.2s ease-out;
+}
+@keyframes opsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.ops-identify-card {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 16px; padding: 22px 22px 16px;
+  width: 100%; max-width: 460px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.32);
+  border-top: 4px solid var(--ops-c);
+}
+.ops-identify-header { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 18px; }
+.ops-identify-icon {
+  width: 42px; height: 42px; border-radius: 11px;
+  background: var(--ops-tint); color: var(--ops-c);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ops-identify-icon svg { width: 22px; height: 22px; }
+.ops-identify-card h3 {
+  font-size: 16px; font-weight: 800; color: var(--text-primary);
+  margin: 1px 0 4px; line-height: 1.25;
+}
+.ops-identify-card p {
+  font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; margin: 0;
+}
+.ops-identify-card p strong { color: var(--text-primary); }
+
+.ops-identify-field {
+  display: flex; flex-direction: column; gap: 5px;
+  margin-bottom: 12px;
+}
+.ops-identify-field span {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--text-muted);
+}
+.ops-identify-field input,
+.ops-identify-field select {
+  background: var(--bg-input); border: 1px solid var(--border);
+  color: var(--text-primary); padding: 10px 12px; border-radius: 9px;
+  font-size: 14px; font-family: var(--font-main);
+  transition: border-color var(--transition);
+}
+.ops-identify-field input:focus,
+.ops-identify-field select:focus {
+  outline: none; border-color: var(--ops-c);
+  box-shadow: 0 0 0 3px var(--ops-tint);
+}
+
+.ops-identify-actions {
+  display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;
+}
+.ops-identify-skip, .ops-identify-confirm {
+  padding: 10px 18px; border-radius: 9px;
+  font-size: 13px; font-weight: 800; cursor: pointer;
+  transition: filter var(--transition);
+}
+.ops-identify-skip {
+  background: transparent; color: var(--text-muted); border: 1px solid var(--border);
+}
+.ops-identify-skip:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+.ops-identify-confirm {
+  background: var(--ops-c); color: var(--ops-on); border: none;
+}
+.ops-identify-confirm:hover { filter: brightness(1.08); }
+
 /* === Barra de progresso === */
 .ops-fs-progress {
   position: sticky; top: calc(4px + 78px); z-index: 5000;

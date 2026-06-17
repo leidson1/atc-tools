@@ -11,14 +11,14 @@
   "steps": [
     {
       "n": "pré-1",
-      "text": "Se for previsível que o incidente/acidente ocorra ou tenha ocorrido no Aeroporto de Palmas ou dentro de 08km do Aeroporto de Palmas: Notificar, imediatamente a Torre Palmas para acionar o sistema de alarme da SCI (sirene).",
+      "text": "Se for previsível que o incidente/acidente ocorra ou tenha ocorrido **no Aeroporto de Palmas ou dentro de 08km do Aeroporto de Palmas**: Notificar, **imediatamente** a Torre Palmas para acionar o **sistema de alarme da SCI (sirene)**.",
       "contacts": [
         "TWR-PJ (SCI)"
       ]
     },
     {
       "n": "pré-2",
-      "text": "Se for previsível que o incidente/acidente ocorra ou tenha ocorrido fora de 08km do Aeroporto de Palmas: notificar, imediatamente, os serviços de resgate e segurança pública via 193 e 190.",
+      "text": "Se for previsível que o incidente/acidente ocorra ou tenha ocorrido **fora de 08km do Aeroporto de Palmas**: notificar, **imediatamente**, os serviços de resgate e segurança pública via **193 e 190**.",
       "contacts": [
         "193 Bombeiros",
         "190 Polícia"
@@ -26,7 +26,7 @@
     },
     {
       "n": "1",
-      "text": "DURANTE AFIS - ACIONAR O SISTEMA DE ALARME DA SCI (SIRENE)",
+      "text": "**DURANTE AFIS** - ACIONAR O SISTEMA DE ALARME DA SCI (SIRENE)",
       "contacts": [
         "SCI"
       ]

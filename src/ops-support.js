@@ -310,8 +310,8 @@ function renderSessionScreen(el) {
     </div>
 
     <div class="ops-fs-body">
-      ${p.intro ? `<div class="ops-fs-intro">${escapeHTML(p.intro)}</div>` : ''}
-      ${p.note ? `<div class="ops-fs-note"><strong>NOTA:</strong> ${escapeHTML(p.note)}</div>` : ''}
+      ${p.intro ? `<div class="ops-fs-intro">${fmtText(p.intro)}</div>` : ''}
+      ${p.note ? `<div class="ops-fs-note"><strong>NOTA:</strong> ${fmtText(p.note)}</div>` : ''}
 
       <div class="ops-steps">
         ${session.steps.map(renderStepCard).join('')}
@@ -393,7 +393,7 @@ function renderStepCard(s) {
       <div class="ops-step-body">
         <div class="ops-step-head">
           <span class="ops-step-num">${escapeHTML(String(s.n))}</span>
-          <span class="ops-step-text">${escapeHTML(s.text)}</span>
+          <span class="ops-step-text">${fmtText(s.text)}</span>
         </div>
         ${contactsRow}
         ${naLine}
@@ -590,3 +590,8 @@ function escapeHTML(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 function escapeAttr(s) { return escapeHTML(s); }
+// Formata texto do passo: escapa HTML e aplica **negrito** estilo Markdown.
+// Mantém o texto integral do documento — só destaca visualmente.
+function fmtText(s) {
+  return escapeHTML(s).replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
+}

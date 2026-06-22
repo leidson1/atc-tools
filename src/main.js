@@ -3,6 +3,8 @@ import './styles/panel.css';
 import './styles/map.css';
 import './styles/components.css';
 import './styles/ops-support.css';
+import './styles/sim.css';
+import './styles/train.css';
 
 import { calculateRdl, getAerodromeInfo } from './api.js';
 import { clearTrajectory, initMap, setAerodrome, showRdlOnMap } from './map.js';
@@ -18,6 +20,8 @@ import { initTrajectory, runOperation, setOperationBase, setOperationToRadialMod
 import { initAerodromeLayer, toggleAerodromeLayer } from './aerodrome-layer.js';
 import { initLiveTraffic, toggleLiveTraffic } from './live-traffic.js';
 import { initOpsSupport } from './ops-support.js';
+import { initSim } from './sim/sim-main.js';
+import { initTrain } from './train/train-main.js';
 
 // App state
 let baseAerodrome = null;
@@ -37,6 +41,12 @@ async function init() {
 
   // Initialize operations support module (checklists)
   initOpsSupport();
+
+  // Simulador APP (treino)
+  initSim();
+
+  // Initialize training module (phraseology lessons)
+  initTrain();
 
   // Initialize settings
   initSettings(onSettingsSave);

@@ -1,0 +1,109 @@
+{
+  "id": "atc-en-initial-contact",
+  "track": "atc-pro",
+  "tier": "free",
+  "cost": "static",
+  "lang": "en",
+  "icon": "radio",
+  "title": "Initial Contact & Readback (EN)",
+  "subtitle": "Contato inicial, cotejo e hearback em inglês",
+  "intro": [
+    "Toda chegada começa com um **contato inicial** e segue numa troca instrução → **cotejo**.",
+    "Estrutura do contato: **estação chamada** + **identificação** + **posição/nível** + **informação (ATIS)**.",
+    "Você vai praticar os **dois lados** — emitir como controlador e cotejar como piloto — e treinar o **hearback** (pegar o cotejo errado)."
+  ],
+  "scenario": "Chegada em Brasília (SBBR). Tráfego TAM3456, A320, nivelado no FL240, inbound, ATIS Charlie.",
+  "exercises": [
+    {
+      "type": "build",
+      "kind": "Contato inicial",
+      "prompt": "Faça o **contato inicial**. Monte a chamada do TAM3456.",
+      "context": "Você é o TAM3456, nivelado no FL240, inbound para Brasília, com a informação ATIS Charlie. Chame a Aproximação.",
+      "solution": ["Brasília Approach", "TAM3456", "FL240", "information Charlie"],
+      "distractors": ["request landing", "ready to descend"],
+      "answer": "Brasília Approach, TAM3456, FL240, information Charlie",
+      "explain": "Ordem padrão: **estação chamada** → **identificação** → **nível** → **informação ATIS**. Curto e inequívoco."
+    },
+    {
+      "type": "choose",
+      "kind": "Resposta do controlador",
+      "prompt": "Você é a **Aproximação**. Ouça o contato inicial e escolha a resposta padrão.",
+      "audioText": "Brasília Approach, TAM3456, FL240, information Charlie.",
+      "options": [
+        "TAM3456, Brasília Approach, identified, descend to FL140.",
+        "TAM3456, roger, go ahead and come on down when you like.",
+        "TAM3456, ok, descend no delay, call you back."
+      ],
+      "correct": 0,
+      "explain": "Confirma a identificação radar e emite a descida com **\"descend to\" + nível**. Evite linguagem coloquial (\"come on down\", \"no delay\")."
+    },
+    {
+      "type": "fill",
+      "kind": "Instrução de descida",
+      "prompt": "Complete a instrução de descida da Aproximação.",
+      "template": "TAM3456, identified, descend to ____ .",
+      "blanks": [
+        { "answer": "FL140", "accept": ["flight level 140", "140"] }
+      ],
+      "explain": "A descida traz a palavra **\"to\"** seguida do **nível**. Padronizar reduz erro de leitura."
+    },
+    {
+      "type": "build",
+      "kind": "Cotejo do piloto",
+      "prompt": "Ouça a instrução e monte o **cotejo** correto (você é o piloto).",
+      "audioText": "TAM3456, descend to FL070, reduce speed to 250 knots.",
+      "solution": ["Descend to FL070", "reduce speed to 250 knots", "TAM3456"],
+      "distractors": ["climb to FL070", "increase speed to 250 knots"],
+      "answer": "Descend to FL070, reduce speed to 250 knots, TAM3456",
+      "explain": "O cotejo repete os **elementos-chave** (nível e velocidade) e fecha com a **identificação**."
+    },
+    {
+      "type": "choose",
+      "kind": "Hearback",
+      "prompt": "A instrução foi: **\"TAM3456, descend to FL070.\"** Ouça o cotejo do piloto. Está correto?",
+      "audioText": "Descending to FL090, TAM3456.",
+      "options": [
+        "Correto — pode seguir.",
+        "Incorreto — nível errado: cotejou FL090, foi instruído FL070.",
+        "Incorreto — identificação errada."
+      ],
+      "correct": 1,
+      "explain": "**Hearback** é responsabilidade do controlador: detectar o cotejo errado. FL090 ≠ FL070 → corrigir imediatamente: \"TAM3456, negative, descend to FL070.\""
+    },
+    {
+      "type": "type",
+      "kind": "Transferência",
+      "prompt": "Ouça a transferência e digite o **cotejo** do piloto.",
+      "audioText": "TAM3456, contact Brasília Tower 118.35.",
+      "answer": "Brasília Tower 118.35, TAM3456",
+      "accept": [
+        "118.35, TAM3456",
+        "Tower 118.35, TAM3456",
+        "Brasília Tower one one eight decimal three five, TAM3456"
+      ],
+      "explain": "Cotejo de transferência = **frequência** + identificação. Incluir o órgão (\"Tower\") é boa prática."
+    },
+    {
+      "type": "build",
+      "kind": "Autorização de pouso",
+      "prompt": "Ouça a Torre e monte o **cotejo** da autorização de pouso.",
+      "audioText": "TAM3456, Brasília Tower, wind 100 degrees 6 knots, runway 11 right, cleared to land.",
+      "solution": ["Cleared to land", "runway 11 right", "TAM3456"],
+      "distractors": ["cleared for take-off", "runway 29 left"],
+      "answer": "Cleared to land runway 11 right, TAM3456",
+      "explain": "Itens **obrigatórios** no cotejo: **autorização** + **pista**. Vento é informação — não se coteja."
+    },
+    {
+      "type": "choose",
+      "kind": "Padronização",
+      "prompt": "Qual transmissão está na **fraseologia padrão** ICAO?",
+      "options": [
+        "TAM3456, cleared to land runway 11 right.",
+        "TAM3456, you're good to land on one one right.",
+        "TAM3456, ok land please, eleven right."
+      ],
+      "correct": 0,
+      "explain": "O padrão ICAO é conciso e inequívoco. Coloquialismos (\"you're good\", \"ok please\") não fazem parte da fraseologia."
+    }
+  ]
+}

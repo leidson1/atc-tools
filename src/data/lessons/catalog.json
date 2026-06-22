@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "tracks": [
+    {
+      "id": "atc-pro",
+      "title": "ATC Pro",
+      "tagline": "Fraseologia ICAO em inglês + padronização",
+      "audience": "Controladores",
+      "icon": "tower",
+      "accent": "blue",
+      "available": true,
+      "tier": "free",
+      "lessons": ["atc-en-initial-contact"]
+    },
+    {
+      "id": "cockpit",
+      "title": "Cockpit",
+      "tagline": "Fraseologia do piloto — PT + EN, cotejo e disciplina de rádio",
+      "audience": "Pilotos e estudantes de pilotagem",
+      "icon": "plane",
+      "accent": "orange",
+      "available": false,
+      "tier": "free",
+      "lessons": []
+    },
+    {
+      "id": "decolagem",
+      "title": "Decolagem",
+      "tagline": "Do zero: alfabeto fonético, números e a matemática que voa",
+      "audience": "Estudantes e comunidade",
+      "icon": "rocket",
+      "accent": "purple",
+      "available": false,
+      "tier": "free",
+      "lessons": []
+    }
+  ]
+}

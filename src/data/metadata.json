@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-10T12:09:10.979Z",
+  "generated_at": "2026-08-11T12:10:17.225Z",
   "sources": {
     "rotaer_page": "https://aisweb.decea.mil.br/?i=aerodromos&tab=rotaer",
     "rotaer_pdf": "https://aisweb.decea.mil.br/downloads/rotaer/rotaer_completo.pdf",
@@ -8,9 +8,9 @@
   "rotaer": {
     "damdt": "D-AMDT 33-26",
     "effective": "13/08/26",
-    "pdfLastModified": "Mon, 10 Aug 2026 12:06:06 GMT",
-    "pdfEtag": "\"6a79beae-5cbb39\"",
-    "pdfSize": "6077241"
+    "pdfLastModified": "Tue, 11 Aug 2026 12:06:18 GMT",
+    "pdfEtag": "\"6a7b103a-5cb9db\"",
+    "pdfSize": "6076891"
   },
   "layers": {
     "ICA:airport_heliport": {

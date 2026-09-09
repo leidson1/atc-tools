@@ -119,6 +119,7 @@ export function attachBasemap(map, { theme = 'light', onChange } = {}) {
   let ultimaTroca = 0;
   let esgotado = false;
   let retentativa = null;
+  let adiado = null;
 
   function aplicarFiltro(f) {
     // A var é lida por .leaflet-tile-pane, irmão dos painéis de overlay e
@@ -169,6 +170,10 @@ export function attachBasemap(map, { theme = 'light', onChange } = {}) {
       aplicarFiltro(p.filter);
     }
 
+    if (adiado) {
+      clearTimeout(adiado);
+      adiado = null;
+    }
     layer = nova;
     idx = i;
     trocando = false;
@@ -184,6 +189,10 @@ export function attachBasemap(map, { theme = 'light', onChange } = {}) {
 
   function semBasemap() {
     esgotado = true;
+    if (adiado) {
+      clearTimeout(adiado);
+      adiado = null;
+    }
     if (layer) {
       soltar(layer);
       layer = null;
@@ -210,7 +219,24 @@ export function attachBasemap(map, { theme = 'light', onChange } = {}) {
 
   function proximo(motivo) {
     if (trocando || esgotado) return;
-    if (ultimaTroca && Date.now() - ultimaTroca < COOLDOWN_MS) return;
+
+    const resta = ultimaTroca ? COOLDOWN_MS - (Date.now() - ultimaTroca) : 0;
+    if (resta > 0) {
+      // O pedido precisa ser adiado, nunca descartado. O Leaflet nao repete
+      // tiles que ja falharam, entao se o fallback tambem estiver fora seus
+      // erros chegam todos dentro do cooldown e, descartados, nenhum evento
+      // novo viria depois: a cascata travaria no segundo provedor morto.
+      if (!adiado) {
+        adiado = setTimeout(() => {
+          adiado = null;
+          // Se alguma tile carregou nesse meio tempo, o provedor se
+          // recuperou sozinho e a troca deixa de fazer sentido.
+          if (sucessos === 0 && erros >= LIMIAR_ERRO) proximo(motivo);
+        }, resta + 50);
+      }
+      return;
+    }
+
     trocando = true;
     console.warn(`[basemap] "${lista[idx]?.id}" falhou (${motivo}) → "${lista[idx + 1]?.id ?? 'nenhum'}"`);
     usar(idx + 1, true); // índice só cresce: impossível entrar em ciclo

@@ -79,6 +79,7 @@ const JANELA_MS = 12000; // janela deslizante de avaliação
 const LIMIAR_ERRO = 8; // nunca troca por uma tile isolada
 const COOLDOWN_MS = 20000; // silêncio após uma troca, evita cascata
 const GRACA_MS = 1500; // camada antiga sobrevive até a nova pintar
+const RETENTATIVA_MS = 60000; // volta ao primário depois de esgotar a lista
 
 function lerPreferencia() {
   try {
@@ -105,6 +106,10 @@ export function attachBasemap(map, { theme = 'light', onChange } = {}) {
   const preferido = lerPreferencia();
   const iPreferido = lista.findIndex((p) => p.id === preferido);
 
+  // Sem nenhuma camada o Leaflet devolve maxZoom Infinity. Fixar no maior
+  // valor da lista mantém o zoom estável mesmo se todos os provedores caírem.
+  map.setMaxZoom(Math.max(...lista.map((p) => p.opts.maxZoom || 18)));
+
   let layer = null;
   let idx = -1;
   let erros = 0;
@@ -113,6 +118,7 @@ export function attachBasemap(map, { theme = 'light', onChange } = {}) {
   let trocando = false;
   let ultimaTroca = 0;
   let esgotado = false;
+  let retentativa = null;
 
   function aplicarFiltro(f) {
     // A var é lida por .leaflet-tile-pane, irmão dos painéis de overlay e
@@ -126,7 +132,16 @@ export function attachBasemap(map, { theme = 'light', onChange } = {}) {
     abertura = Date.now();
   }
 
-  function usar(i) {
+  function soltar(l) {
+    // Desligar os handlers é essencial: durante o período de graça a camada
+    // antiga continua emitindo tileerror/tileload nos mesmos contadores, o
+    // que envenenaria a janela de avaliação da camada nova.
+    l.off('tileerror', onErro);
+    l.off('tileload', onSucesso);
+    map.removeLayer(l);
+  }
+
+  function usar(i, porFalha = false) {
     if (i >= lista.length) return semBasemap();
 
     const p = lista[i];
@@ -134,25 +149,34 @@ export function attachBasemap(map, { theme = 'light', onChange } = {}) {
     nova.on('tileerror', onErro);
     nova.on('tileload', onSucesso);
     nova.addTo(map);
-    aplicarFiltro(p.filter);
 
     // Só remove a anterior depois que a nova pintou, para não piscar branco.
     const antiga = layer;
     if (antiga) {
       let feito = false;
-      const matar = () => {
+      const trocar = () => {
         if (feito) return;
         feito = true;
-        map.removeLayer(antiga);
+        soltar(antiga);
+        // O filtro entra junto com a remoção: aplicado antes, valeria para a
+        // camada antiga ainda visível durante a graça (ex.: inverteria um
+        // tile claro por 1,5s ao cair para o fallback invertido).
+        aplicarFiltro(p.filter);
       };
-      nova.once('load', matar);
-      setTimeout(matar, GRACA_MS);
+      nova.once('load', trocar);
+      setTimeout(trocar, GRACA_MS);
+    } else {
+      aplicarFiltro(p.filter);
     }
 
     layer = nova;
     idx = i;
     trocando = false;
-    ultimaTroca = Date.now();
+    // O cooldown existe para a camada recém-instalada não derrubar a próxima
+    // com os erros da própria montagem. Armá-lo na instalação INICIAL, porém,
+    // bloquearia o primeiro failover por 20s — justamente quando o provedor
+    // primário está fora, que é o caso para o qual isto existe.
+    ultimaTroca = porFalha ? Date.now() : 0;
     zerarJanela();
     cont.classList.remove('bm-offline');
     if (onChange) onChange(p, i);
@@ -161,21 +185,35 @@ export function attachBasemap(map, { theme = 'light', onChange } = {}) {
   function semBasemap() {
     esgotado = true;
     if (layer) {
-      map.removeLayer(layer);
+      soltar(layer);
       layer = null;
     }
+    idx = -1; // senão atual() segue devolvendo um provedor que não está no mapa
     aplicarFiltro(null);
     cont.classList.add('bm-offline');
     if (onChange) onChange(null, -1);
     console.error('[basemap] todos os provedores falharam; seguindo sem carta de fundo');
+
+    // Queda de rede costuma ser passageira (túnel, Wi-Fi instável). Sem esta
+    // retentativa o mapa ficaria sem carta de fundo até o próximo reload.
+    if (!retentativa) {
+      retentativa = setTimeout(() => {
+        retentativa = null;
+        esgotado = false;
+        trocando = false;
+        ultimaTroca = 0;
+        console.warn('[basemap] retentando a partir do provedor primário');
+        usar(0);
+      }, RETENTATIVA_MS);
+    }
   }
 
   function proximo(motivo) {
     if (trocando || esgotado) return;
-    if (Date.now() - ultimaTroca < COOLDOWN_MS) return;
+    if (ultimaTroca && Date.now() - ultimaTroca < COOLDOWN_MS) return;
     trocando = true;
     console.warn(`[basemap] "${lista[idx]?.id}" falhou (${motivo}) → "${lista[idx + 1]?.id ?? 'nenhum'}"`);
-    usar(idx + 1); // índice só cresce: impossível entrar em ciclo
+    usar(idx + 1, true); // índice só cresce: impossível entrar em ciclo
   }
 
   function janela() {
@@ -209,6 +247,12 @@ export function attachBasemap(map, { theme = 'light', onChange } = {}) {
         localStorage.setItem(STORAGE_KEY, id);
       } catch {
         /* modo privado: a escolha vale só nesta sessão */
+      }
+      // A escolha manual cancela a retentativa pendente: quem mandou foi o
+      // operador, e o timer voltaria ao primário por cima da decisão dele.
+      if (retentativa) {
+        clearTimeout(retentativa);
+        retentativa = null;
       }
       esgotado = false;
       trocando = false;

@@ -41,11 +41,16 @@
   filter: var(--bm-filter, none);
 }
 
-.bm-offline {
+/* Precisa do #map: a regra de fundo do proprio #map tem especificidade de id
+   e venceria uma classe sozinha. */
+#map.bm-offline {
   background: #eef1f4;
 }
 
-/* === Seletor de carta de fundo === */
+/* === Seletor de carta de fundo ===
+   O mapa e sempre claro (os rotulos de FIR usam halo branco), entao este
+   controle usa cores fixas em vez dos tokens de tema — com os tokens, o
+   icone ficava quase invisivel quando o app estava no tema escuro. */
 .bm-control {
   position: relative;
 }
@@ -56,12 +61,14 @@
   justify-content: center;
   width: 30px;
   height: 30px;
-  color: var(--text-secondary);
+  color: #4a5568;
   background: #fff;
+  /* .leaflet-bar so tira a borda do ultimo filho, e aqui o ultimo e o menu. */
+  border-bottom: none;
 }
 
 .bm-control .bm-toggle:hover {
-  color: var(--text-primary);
+  color: #1a1a2e;
 }
 
 .bm-menu {
@@ -70,8 +77,8 @@
   right: 34px;
   min-width: 178px;
   padding: 4px;
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
+  background: #fff;
+  border: 1px solid #d8dee6;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
   display: flex;
@@ -79,12 +86,18 @@
   gap: 2px;
 }
 
+/* Obrigatorio: a regra de autor acima vence o [hidden]{display:none} da folha
+   do navegador, e sem isto o menu ficaria permanentemente aberto. */
+.bm-menu[hidden] {
+  display: none;
+}
+
 .bm-item {
   padding: 6px 9px;
   font-family: var(--font-main);
   font-size: 12px;
   text-align: left;
-  color: var(--text-secondary);
+  color: #4a5568;
   background: transparent;
   border: 0;
   border-radius: var(--radius-sm);
@@ -93,13 +106,13 @@
 }
 
 .bm-item:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: #e8edf2;
+  color: #1a1a2e;
 }
 
 .bm-item.active {
-  color: var(--text-primary);
-  background: var(--bg-hover);
+  color: #1a1a2e;
+  background: #e8edf2;
   font-weight: 600;
 }
 

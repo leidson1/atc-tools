@@ -33,6 +33,76 @@
   font-family: var(--font-main) !important;
 }
 
+/* === Basemap: filtro e estado sem carta ===
+   O filtro fica no painel de tiles, que é irmão dos painéis de overlay e
+   marcadores — assim FIR/TMA/CTR, radiais e alvos não são afetados. Mover
+   esta regra para .leaflet-container inverteria as cores dos overlays. */
+.leaflet-tile-pane {
+  filter: var(--bm-filter, none);
+}
+
+.bm-offline {
+  background: #eef1f4;
+}
+
+/* === Seletor de carta de fundo === */
+.bm-control {
+  position: relative;
+}
+
+.bm-control .bm-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  color: var(--text-secondary);
+  background: #fff;
+}
+
+.bm-control .bm-toggle:hover {
+  color: var(--text-primary);
+}
+
+.bm-menu {
+  position: absolute;
+  top: 0;
+  right: 34px;
+  min-width: 178px;
+  padding: 4px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bm-item {
+  padding: 6px 9px;
+  font-family: var(--font-main);
+  font-size: 12px;
+  text-align: left;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bm-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.bm-item.active {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  font-weight: 600;
+}
+
 /* === Custom Popup Style === */
 .leaflet-popup-content-wrapper {
   background: #ffffff !important;

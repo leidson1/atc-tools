@@ -1,7 +1,9 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { attachBasemap, addBasemapControl } from './basemap.js';
 
 let map = null;
+let basemap = null;
 let aerodromeMarker = null;
 let pointMarker = null;
 let radialLine = null;
@@ -9,9 +11,6 @@ let distanceCircles = [];
 let trajectoryLayers = [];
 let compassRoseSvg = null;
 let onMapClick = null;
-
-const LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-const LIGHT_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
 // Custom aerodrome icon
 const aerodromeIcon = L.divIcon({
@@ -49,11 +48,10 @@ export function initMap(containerId, onClick) {
   // Zoom control on the right so the floating panel (top-left) doesn't cover it
   L.control.zoom({ position: 'topright' }).addTo(map);
 
-  L.tileLayer(LIGHT_TILES, {
-    attribution: LIGHT_ATTR,
-    maxZoom: 18,
-    subdomains: 'abcd',
-  }).addTo(map);
+  // Fundo claro fixo: os rótulos de FIR e os ícones usam halo branco, que
+  // some sobre carta escura. Trocar o tema do mapa exigiria revisar aquilo.
+  basemap = attachBasemap(map, { theme: 'light' });
+  addBasemapControl(map, basemap);
 
   // Cursor coordinates display
   map.on('mousemove', (e) => {

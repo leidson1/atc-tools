@@ -2,6 +2,7 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+import { attachBasemap } from '../basemap.js';
 import { createAircraft, updateAircraft, applyActions } from './sim-engine.js';
 import { parseCommand, buildReadback } from './sim-commands.js';
 import { SCENARIOS } from './sim-scenarios.js';
@@ -77,10 +78,11 @@ function renderShell(el) {
       </div>
     </div>`;
 
-  // Mapa estilo radar (tiles escuros)
-  map = L.map('sim-map', { zoomControl: false, attributionControl: false, center: [-10.29, -48.36], zoom: 9 });
+  // Mapa estilo radar (tiles escuros). A atribuição é obrigatória pelos
+  // provedores de tile, então o controle fica ligado (compacto, via CSS).
+  map = L.map('sim-map', { zoomControl: false, attributionControl: true, center: [-10.29, -48.36], zoom: 9 });
   L.control.zoom({ position: 'topright' }).addTo(map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 18 }).addTo(map);
+  attachBasemap(map, { theme: 'dark' });
   setTimeout(() => map.invalidateSize(), 50);
 
   el.querySelector('#sim-close').addEventListener('click', closeSim);

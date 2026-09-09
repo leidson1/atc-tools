@@ -139,6 +139,7 @@ async function main() {
 
   const previous = readLocalMetadata();
   let shouldFail = false;
+  const falhas = [];
   const metadata = {
     generated_at: new Date().toISOString(),
     sources: {
@@ -184,8 +185,37 @@ async function main() {
       console.log(`    emenda: ${summary.amendment}`);
       console.log(`    futura: ${summary.futureAmendment}`);
     } catch (err) {
+      // Registra em vez de so imprimir: antes este catch engolia o erro e o
+      // script saia com codigo 0, entao uma camada renomeada pelo DECEA
+      // congelava os dados aeronauticos com o workflow verde.
+      falhas.push({ layer: item.layer, label: item.label, err });
       console.log(`  ${item.label}: erro - ${err.message}`);
     }
+  }
+
+  if (falhas.length) {
+    const nomes = falhas.map((f) => f.label).join(', ');
+
+    // Fonte fora do ar e diferente de fonte quebrada. Queda de rede ja tem
+    // tratamento proprio (codigo 3 = pula hoje, tenta amanha); qualquer
+    // outro erro significa que a camada mudou de nome/sumiu, e isso precisa
+    // falhar alto.
+    if (falhas.every((f) => isNetworkError(f.err))) {
+      console.log(`\nFontes inacessiveis (rede): ${nomes}. Pulando hoje.`);
+      process.exit(3);
+    }
+
+    console.log(`\nFALHA: camada(s) do GeoAISWEB inacessiveis por erro nao-transitorio: ${nomes}.`);
+    console.log('Verifique se o DECEA renomeou ou removeu a camada (ja aconteceu antes;');
+    console.log('veja LAYER_CANDIDATES em scripts/sync-waypoints.mjs).');
+    process.exit(4);
+  }
+
+  // Rede de seguranca: mesmo sem excecao, o metadata precisa ter as 7 camadas.
+  const ausentes = LAYERS.filter((i) => !metadata.layers[i.layer]).map((i) => i.label);
+  if (ausentes.length) {
+    console.log(`\nFALHA: camada(s) ausentes no metadata apos a coleta: ${ausentes.join(', ')}.`);
+    process.exit(4);
   }
 
   if (WRITE_METADATA) {

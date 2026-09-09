@@ -43,6 +43,10 @@ jobs:
           mkdir -p dist/offline
           cp dist-single/index.html dist/offline/atc-tools-offline.html
           cp .github/pages/offline-download.html dist/offline/index.html
+          # Os PDFs oficiais (fichas AVSEC / emergencias) sao referenciados por
+          # caminho relativo. Sem esta copia, abrir a ficha a partir da pagina
+          # offline dava 404 numa aba em branco, sem explicacao.
+          cp -r public/pdfs dist/offline/pdfs
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5

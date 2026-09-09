@@ -49,6 +49,9 @@ jobs:
           elif [ "$status" -eq 3 ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "::warning title=Fontes oficiais indisponiveis::DECEA inacessivel (rede) apos varias tentativas. Pulando hoje; o agendamento tenta novamente amanha."
+          elif [ "$status" -eq 4 ]; then
+            echo "::error title=Camada do GeoAISWEB quebrada::Uma ou mais camadas do DECEA falharam por erro nao-transitorio (provavel rename/remocao). A sincronizacao foi ABORTADA para nao publicar dado parcial. Os dados param de atualizar ate isso ser corrigido."
+            exit 1
           else
             exit "$status"
           fi

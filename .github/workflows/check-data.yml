@@ -38,6 +38,9 @@ jobs:
             echo "::warning title=Dados oficiais mudaram::Mudanca detectada nas fontes oficiais. O workflow Update Official Data vai sincronizar e publicar automaticamente."
           elif [ "$status" -eq 3 ]; then
             echo "::warning title=Fontes oficiais indisponiveis::DECEA inacessivel (rede) apos varias tentativas. Verificacao pulada; tenta novamente amanha."
+          elif [ "$status" -eq 4 ]; then
+            echo "::error title=Camada do GeoAISWEB quebrada::Uma ou mais camadas do DECEA falharam por erro nao-transitorio (provavel rename/remocao). Os dados aeronauticos PARAM de atualizar ate isso ser corrigido. Veja o log acima."
+            exit 1
           else
             exit "$status"
           fi

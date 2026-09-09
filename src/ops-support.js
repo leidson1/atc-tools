@@ -15,6 +15,7 @@ import appEmergDescida from './data/protocols/app-emerg-descida.json';
 import appEmergCombust from './data/protocols/app-emerg-combustivel.json';
 import appEal from './data/protocols/app-eal.json';
 import appAcidente from './data/protocols/app-acidente.json';
+import { showToast } from './results-panel.js';
 
 const PROTOCOLS = {
   'avsec-anexo-2': avsec2,
@@ -256,13 +257,23 @@ function renderGroupCard(group) {
 // ============================================================
 // PDF
 // ============================================================
+const PDF_BASE_ONLINE = 'https://leidson1.github.io/atc-tools/pdfs/';
+
 function openPdfRef(file, page) {
-  // Em produção, /pdfs/<arquivo>#page=N abre na página específica nos navegadores que suportam.
-  // No build offline (single-file), o asset não está incluído — abre uma mensagem amigável.
-  const url = `pdfs/${file}#page=${page || 1}`;
+  // Em produção, pdfs/<arquivo>#page=N abre na página específica nos navegadores que suportam.
+  // O pacote offline é um HTML avulso: não existe pasta pdfs/ ao lado dele, e o caminho
+  // relativo dava 404 numa aba em branco, sem explicação, no meio de um fluxo de emergência.
+  // Aqui ele aponta para a cópia publicada e avisa que esse item depende de internet.
+  const offline = window.location.protocol === 'file:';
+  const url = `${offline ? PDF_BASE_ONLINE : 'pdfs/'}${file}#page=${page || 1}`;
+
   const win = window.open(url, '_blank');
   if (!win) {
-    alert('Permita pop-ups para abrir o PDF original.');
+    showToast('Permita pop-ups para abrir o PDF original.', 'warning');
+    return;
+  }
+  if (offline) {
+    showToast('O PDF original abre pela internet; os checklists funcionam offline.', 'info');
   }
 }
 

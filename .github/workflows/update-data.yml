@@ -72,11 +72,26 @@ jobs:
         id: diff
         shell: bash
         run: |
-          if git diff --quiet; then
+          # git status --porcelain enxerga tambem arquivos novos; git diff nao,
+          # e um arquivo gerado pela primeira vez seria descartado em silencio.
+          mudados="$(git status --porcelain | awk '{print $NF}')"
+          if [ -z "$mudados" ]; then
             echo "has_diff=false" >> "$GITHUB_OUTPUT"
             echo "No file changes after sync."
+            exit 0
+          fi
+          echo "has_diff=true" >> "$GITHUB_OUTPUT"
+
+          # Se so o metadata mudou (D-AMDT nova do ROTAER ou revalidacao semanal
+          # sem dado novo), registra mas nao publica: o app gerado seria
+          # identico, porque ele nao usa nada do ROTAER.
+          if [ "$mudados" = "src/data/metadata.json" ]; then
+            echo "data_changed=false" >> "$GITHUB_OUTPUT"
+            echo "Only metadata changed; will commit without deploying."
           else
-            echo "has_diff=true" >> "$GITHUB_OUTPUT"
+            echo "data_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Data files changed:"
+            echo "$mudados" | sed 's/^/  /'
           fi
 
       - name: Commit and publish to default branch
@@ -84,17 +99,29 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          DATA_CHANGED: ${{ steps.diff.outputs.data_changed }}
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Atualiza dados oficiais do ROTAER/GeoAISWEB (automatico)"
+          if [ "$DATA_CHANGED" = "true" ]; then
+            git commit -m "Atualiza dados oficiais do ROTAER/GeoAISWEB (automatico)"
+          else
+            git commit -m "Registra checagem das fontes oficiais, sem dado novo (automatico)"
+          fi
 
           # Publica direto no branch padrao; em caso de corrida, rebase e tenta de novo.
           git push origin "HEAD:${DEFAULT_BRANCH}" \
             || ( git pull --rebase origin "${DEFAULT_BRANCH}" \
                  && git push origin "HEAD:${DEFAULT_BRANCH}" )
+
+          # O commit so do metadata precisa entrar mesmo sem deploy: e a data dele
+          # que a revalidacao semanal do check-data usa como referencia.
+          if [ "$DATA_CHANGED" != "true" ]; then
+            echo "Metadata registrada; app inalterado, deploy dispensado."
+            exit 0
+          fi
 
           # Push via GITHUB_TOKEN nao dispara outros workflows; aciona o deploy explicitamente.
           gh workflow run deploy-pages.yml --ref "${DEFAULT_BRANCH}"

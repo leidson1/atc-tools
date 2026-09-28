@@ -12,6 +12,8 @@ const ROTAER_PDF = 'https://aisweb.decea.mil.br/downloads/rotaer/rotaer_completo
 const METADATA_PATH = resolve(ROOT, 'src/data/metadata.json');
 const WRITE_METADATA = process.argv.includes('--write-metadata');
 const FAIL_ON_CHANGE = process.argv.includes('--fail-on-change');
+// Idade maxima da ultima sincronizacao completa antes de forcar uma nova.
+const SYNC_MAX_DIAS = 7;
 
 const LAYERS = [
   { label: 'Aerodromos/Helipontos', layer: 'ICA:airport_heliport', local: 'src/data/aerodromes.json', uniqueField: 'localidade_id' },
@@ -153,8 +155,31 @@ async function main() {
 
   const rotaer = await fetchRotaerSummary();
   metadata.rotaer = rotaer;
-  const rotaerChanged = hasChanged(rotaer, previous?.rotaer);
+  // So publicacao de verdade conta como mudanca: numero da D-AMDT e vigencia.
+  // ETag, Last-Modified e tamanho do PDF mudam quase todo dia sem emenda nova
+  // (de 09/09 a 27/09, 18 dias seguidos), e compara-los disparava sync, commit
+  // e deploy diarios sem nenhum dado novo. Continuam gravados, como registro.
+  const sinalRotaer = (r) => r && { damdt: r.damdt, effective: r.effective };
+  const rotaerChanged = hasChanged(sinalRotaer(rotaer), sinalRotaer(previous?.rotaer));
   if (rotaerChanged) shouldFail = true;
+
+  // Rede de seguranca. O ruido diario do PDF tinha um efeito colateral util:
+  // forcava um sync completo todo dia, o que pegava de brinde uma correcao do
+  // DECEA que nao alterasse contagem nem emenda de nenhuma camada. Sem ele,
+  // essa correcao passaria despercebida ate a proxima emenda; com este limite,
+  // e pega em no maximo SYNC_MAX_DIAS.
+  const ultimaSync = Date.parse(previous?.generated_at || '');
+  const idadeDias = Number.isFinite(ultimaSync) ? (Date.now() - ultimaSync) / 86_400_000 : null;
+  const syncVencido = idadeDias !== null && idadeDias >= SYNC_MAX_DIAS;
+  if (syncVencido) shouldFail = true;
+
+  if (idadeDias !== null) {
+    console.log(
+      `Ultima sincronizacao completa: ha ${idadeDias.toFixed(1)} dia(s)` +
+        (syncVencido ? ` | REVALIDACAO (limite de ${SYNC_MAX_DIAS} dias)` : '') +
+        '\n'
+    );
+  }
 
   console.log('ROTAER');
   console.log(`  Emenda pagina: ${rotaer.damdt}${rotaerChanged ? ' | MUDOU' : ''}`);

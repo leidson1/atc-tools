@@ -1,14 +1,16 @@
 const VERSION_URL = 'https://leidson1.github.io/atc-tools/version.json';
 const APP_VERSION = (typeof __APP_VERSION__ !== 'undefined') ? __APP_VERSION__ : 'dev';
-// Data dos dados oficiais embutidos neste build (ROTAER/GeoAISWEB).
-const DATA_DATE = (typeof __DATA_GENERATED_AT__ !== 'undefined') ? __DATA_GENERATED_AT__ : null;
+// Identidade dos dados oficiais embutidos neste build: hash do conteúdo e a
+// emenda AIRAC de onde vieram (ex.: "2026-09-03").
+const DATA_HASH = (typeof __DATA_HASH__ !== 'undefined') ? __DATA_HASH__ : null;
+const DATA_AMENDMENT = (typeof __DATA_AMENDMENT__ !== 'undefined') ? __DATA_AMENDMENT__ : null;
 
-function formatarData(iso) {
-  try {
-    return new Date(iso).toLocaleDateString('pt-BR');
-  } catch {
-    return iso;
-  }
+// "2026-09-03" -> "03/09/2026". Formata a string à mão: new Date("2026-09-03")
+// é meia-noite UTC, que no fuso de Brasília ainda é o dia anterior. Aceitar só
+// esse formato também garante que nada além de dígitos vá parar no innerHTML.
+function formatarEmenda(ymd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd || '');
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
 }
 
 function isOfflineBuild() {
@@ -40,9 +42,10 @@ function injectVersionLabel() {
   // Always show version in the welcome screen and as a small footer in settings
   const welcomeVer = document.querySelector('.welcome-version');
   if (!welcomeVer) return;
-  // A data dos dados importa mais que a versao do app: e ela que diz se o
-  // ROTAER/TMA em maos ainda vale.
-  const dados = DATA_DATE ? ` · dados de ${formatarData(DATA_DATE)}` : '';
+  // A emenda dos dados importa mais que a versão do app: é ela que diz se a
+  // TMA/CTR e os aeródromos em mãos ainda valem.
+  const emenda = formatarEmenda(DATA_AMENDMENT);
+  const dados = emenda ? ` · dados: emenda ${emenda}` : '';
   welcomeVer.textContent = `v${APP_VERSION}${isOfflineBuild() ? ' (offline)' : ''}${dados}`;
 }
 
@@ -61,17 +64,19 @@ async function checkRemoteVersion() {
       return;
     }
 
-    // Mesma versao de app, porem dados oficiais mais recentes. Este e o caso
-    // comum: o ROTAER muda toda semana e a versao do app quase nunca.
-    if (data?.data_generated_at && DATA_DATE && data.data_generated_at !== DATA_DATE) {
-      const remota = new Date(data.data_generated_at);
-      const local = new Date(DATA_DATE);
-      if (remota > local) {
-        showUpdateBanner(
-          `Dados oficiais atualizados em <strong>${formatarData(data.data_generated_at)}</strong> ` +
-            `(esta cópia é de ${formatarData(DATA_DATE)})`
-        );
-      }
+    // Mesma versão do app, dados oficiais diferentes: o caso comum, já que o
+    // DECEA publica emenda a cada ciclo AIRAC e a versão do app quase nunca
+    // muda. Compara o conteúdo, não datas — a data de geração mudava a cada
+    // checagem diária mesmo sem dado novo, e o aviso aparecia todo dia.
+    if (data?.data_hash && DATA_HASH && data.data_hash !== DATA_HASH) {
+      const remota = formatarEmenda(data.data_amendment);
+      const local = formatarEmenda(DATA_AMENDMENT);
+      showUpdateBanner(
+        remota && remota !== local
+          ? `Nova emenda dos dados oficiais: <strong>${remota}</strong>` +
+              (local ? ` (esta cópia é da emenda ${local})` : '')
+          : 'Os dados oficiais foram corrigidos depois que esta cópia foi baixada'
+      );
     }
   } catch {
     // Silently fail - no internet or CORS, etc.

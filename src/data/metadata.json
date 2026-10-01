@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-28T18:41:12.972Z",
+  "generated_at": "2026-10-01T17:27:28.259Z",
   "sources": {
     "rotaer_page": "https://aisweb.decea.mil.br/?i=aerodromos&tab=rotaer",
     "rotaer_pdf": "https://aisweb.decea.mil.br/downloads/rotaer/rotaer_completo.pdf",
@@ -8,17 +8,17 @@
   "rotaer": {
     "damdt": "D-AMDT 40-26",
     "effective": "01/10/26",
-    "pdfLastModified": "Mon, 28 Sep 2026 18:06:21 GMT",
-    "pdfEtag": "\"6abaac9d-5dff3e\"",
-    "pdfSize": "6160190"
+    "pdfLastModified": "Thu, 01 Oct 2026 17:07:01 GMT",
+    "pdfEtag": "\"6abe9335-5de51e\"",
+    "pdfSize": "6153502"
   },
   "layers": {
     "ICA:airport_heliport": {
       "layer": "ICA:airport_heliport",
-      "officialCount": 6077,
-      "comparableCount": 6077,
-      "uniqueCount": 6077,
-      "amendment": "2026-09-03Z (6077)",
+      "officialCount": 6112,
+      "comparableCount": 6112,
+      "uniqueCount": 6112,
+      "amendment": "2026-10-01Z (6112)",
       "futureAmendment": "-"
     },
     "ICA:waypoint_aisweb": {
@@ -26,48 +26,48 @@
       "officialCount": 7938,
       "comparableCount": 7932,
       "uniqueCount": 7932,
-      "amendment": "2026-09-03Z (7938)",
-      "futureAmendment": "2026-10-01Z (7938)"
+      "amendment": "2026-10-01Z (7938)",
+      "futureAmendment": "2026-10-29Z (7938)"
     },
     "ICA:vor": {
       "layer": "ICA:vor",
       "officialCount": 77,
       "comparableCount": 77,
       "uniqueCount": null,
-      "amendment": "2026-09-03Z (77)",
-      "futureAmendment": "2026-10-01Z (77)"
+      "amendment": "2026-10-01Z (77)",
+      "futureAmendment": "2026-10-29Z (77)"
     },
     "ICA:ndb": {
       "layer": "ICA:ndb",
       "officialCount": 24,
       "comparableCount": 24,
       "uniqueCount": null,
-      "amendment": "2026-09-03Z (24)",
-      "futureAmendment": "2026-10-01Z (24)"
+      "amendment": "2026-10-01Z (24)",
+      "futureAmendment": "2026-10-29Z (24)"
     },
     "ICA:TMA": {
       "layer": "ICA:TMA",
       "officialCount": 62,
       "comparableCount": 62,
       "uniqueCount": null,
-      "amendment": "2026-09-03Z (62)",
-      "futureAmendment": "2026-10-01Z (62)"
+      "amendment": "2026-10-01Z (62)",
+      "futureAmendment": "2026-10-29Z (62)"
     },
     "ICA:CTR": {
       "layer": "ICA:CTR",
       "officialCount": 65,
       "comparableCount": 65,
       "uniqueCount": null,
-      "amendment": "2026-09-03Z (65)",
-      "futureAmendment": "2026-10-01Z (65)"
+      "amendment": "2026-10-01Z (65)",
+      "futureAmendment": "2026-10-29Z (65)"
     },
     "ICA:fir": {
       "layer": "ICA:fir",
       "officialCount": 5,
       "comparableCount": 5,
       "uniqueCount": null,
-      "amendment": "2026-09-03Z (5)",
-      "futureAmendment": "2026-10-01Z (5)"
+      "amendment": "2026-10-01Z (5)",
+      "futureAmendment": "2026-10-29Z (5)"
     }
   }
 }

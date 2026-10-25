@@ -50,6 +50,31 @@ function interessa(href, texto) {
   return INTERESSE.test(href) || INTERESSE.test(texto);
 }
 
+// Modo: 'mapa' lista as fontes do AISWEB; 'govbr' testa os hosts .gov.br que o
+// proprio AISWEB usa em links de download (ex.: botao XLS da pagina de Fixos).
+const MODO = process.argv[2] || 'mapa';
+
+if (MODO === 'govbr') {
+  const LAYERS = ['ICA:airport_heliport', 'ICA:waypoint_aisweb', 'ICA:vor', 'ICA:ndb', 'ICA:TMA', 'ICA:CTR', 'ICA:fir'];
+  for (const host of ['geoaisweb.decea.gov.br', 'aisweb.decea.gov.br']) {
+    console.log(`\n==== ${host}`);
+    const raiz = await get(`https://${host}/`);
+    if (raiz) console.log(`      location final: ${raiz.res.url}`);
+  }
+  console.log('\n==== WFS em geoaisweb.decea.gov.br (1 feature por camada)');
+  for (const layer of LAYERS) {
+    const q = new URLSearchParams({ service: 'WFS', version: '2.0.0', request: 'GetFeature', typeNames: layer,
+      outputFormat: 'application/json', srsName: 'EPSG:4326', count: '1' });
+    const r = await get(`https://geoaisweb.decea.gov.br/geoserver/ICA/wfs?${q}`);
+    if (!r) continue;
+    let resumo = r.corpo.replace(/\s+/g, ' ').slice(0, 160);
+    try { const j = JSON.parse(r.corpo); resumo = `JSON ok: numberMatched=${j.numberMatched ?? j.totalFeatures} emenda=${j.features?.[0]?.properties?.emenda}`; } catch {}
+    console.log(`      ${layer}: ${resumo}  | url final: ${r.res.url.slice(0, 60)}`);
+  }
+  console.log(`\n${feitas} requisicoes feitas.`);
+  process.exit(0);
+}
+
 console.log('==== 1. Pagina inicial do AISWEB: links relevantes');
 const home = await get(`${BASE}/`);
 const candidatos = [];

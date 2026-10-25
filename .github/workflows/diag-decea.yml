@@ -1,0 +1,49 @@
+name: Diagnose DECEA access
+
+# Sondagem manual das fontes do DECEA a partir do runner do GitHub, para
+# incidentes de acesso (ex.: HTTP 403 no GeoAISWEB em 23/10/2026).
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/setup-local-development-hDh47
+    paths:
+      - .github/workflows/diag-decea.yml
+      - scripts/diag-decea.mjs
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Probe with Node fetch (same client as the sync scripts)
+        run: node scripts/diag-decea.mjs
+
+      - name: Probe with curl (different TLS/HTTP stack)
+        shell: bash
+        run: |
+          set +e
+          U='https://geoaisweb.decea.mil.br/geoserver/ICA/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=ICA:fir&outputFormat=application/json&count=1'
+          echo "--- DNS ---"
+          getent ahosts geoaisweb.decea.mil.br | head -4
+          getent ahosts aisweb.decea.mil.br | head -2
+          echo "--- curl default ---"
+          curl -sS -o /tmp/b1 -D - --max-time 25 "$U" | head -20; head -c 300 /tmp/b1; echo
+          echo "--- curl browser UA, HTTP/1.1 ---"
+          curl -sS --http1.1 -o /tmp/b2 -D - --max-time 25 \
+            -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36' \
+            -H 'Accept-Language: pt-BR,pt;q=0.9' "$U" | head -20; head -c 300 /tmp/b2; echo
+          echo "--- TLS / certificate ---"
+          echo | openssl s_client -connect geoaisweb.decea.mil.br:443 -servername geoaisweb.decea.mil.br 2>/dev/null \
+            | openssl x509 -noout -subject -issuer -dates 2>/dev/null
+          exit 0

@@ -5,6 +5,12 @@ name: Diagnose DECEA access
 # Actions > Diagnose DECEA access > Run workflow e ler o RESUMO no log.
 on:
   workflow_dispatch:
+  # Temporario: dispara nesta branch enquanto o mapeamento de fontes e feito.
+  push:
+    branches:
+      - claude/setup-local-development-hDh47
+    paths:
+      - scripts/diag-fontes.mjs
 
 permissions:
   contents: read
@@ -23,6 +29,9 @@ jobs:
 
       - name: Probe with Node fetch (same client as the sync scripts)
         run: node scripts/diag-decea.mjs
+
+      - name: Map alternative official sources on AISWEB
+        run: node scripts/diag-fontes.mjs
 
       - name: Probe with curl (different TLS/HTTP stack)
         shell: bash

@@ -12,6 +12,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fetchDecea } from './lib/decea-fetch.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -37,7 +38,7 @@ async function tryFetchLayer(layer) {
   });
   const url = `${WFS_BASE}?${params.toString()}`;
   console.log(`Tentando layer: ${layer}`);
-  const res = await fetch(url);
+  const res = await fetchDecea(url);
   if (!res.ok) {
     console.warn(`  -> HTTP ${res.status}`);
     return null;

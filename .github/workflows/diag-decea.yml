@@ -1,15 +1,10 @@
 name: Diagnose DECEA access
 
 # Sondagem manual das fontes do DECEA a partir do runner do GitHub, para
-# incidentes de acesso (ex.: HTTP 403 no GeoAISWEB em 23/10/2026).
+# incidentes de acesso (ex.: HTTP 403 no GeoAISWEB em 23/10/2026). Rodar em
+# Actions > Diagnose DECEA access > Run workflow e ler o RESUMO no log.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - claude/setup-local-development-hDh47
-    paths:
-      - .github/workflows/diag-decea.yml
-      - scripts/diag-decea.mjs
 
 permissions:
   contents: read

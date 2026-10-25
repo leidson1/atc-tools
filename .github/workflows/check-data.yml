@@ -43,6 +43,9 @@ jobs:
           elif [ "$status" -eq 4 ]; then
             echo "::error title=Camada do GeoAISWEB quebrada::Uma ou mais camadas do DECEA falharam por erro nao-transitorio (provavel rename/remocao). Os dados aeronauticos PARAM de atualizar ate isso ser corrigido. Veja o log acima."
             exit 1
+          elif [ "$status" -eq 5 ]; then
+            echo "::error title=DECEA bloqueando acesso automatizado::A fonte respondeu com o desafio anti-robo do Cloudflare (HTTP 403, cf-mitigated: challenge). Nao e falha do projeto nem camada renomeada. Os dados aeronauticos param de atualizar ate o DECEA liberar o acesso; a checagem diaria retoma sozinha quando isso acontecer."
+            exit 1
           else
             exit "$status"
           fi

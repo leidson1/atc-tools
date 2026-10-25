@@ -52,6 +52,9 @@ jobs:
           elif [ "$status" -eq 4 ]; then
             echo "::error title=Camada do GeoAISWEB quebrada::Uma ou mais camadas do DECEA falharam por erro nao-transitorio (provavel rename/remocao). A sincronizacao foi ABORTADA para nao publicar dado parcial. Os dados param de atualizar ate isso ser corrigido."
             exit 1
+          elif [ "$status" -eq 5 ]; then
+            echo "::error title=DECEA bloqueando acesso automatizado::A fonte respondeu com o desafio anti-robo do Cloudflare (HTTP 403, cf-mitigated: challenge). Sincronizacao nao executada; o que esta publicado segue intacto. Retoma sozinha quando o DECEA liberar o acesso."
+            exit 1
           else
             exit "$status"
           fi

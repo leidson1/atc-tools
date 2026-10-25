@@ -4,6 +4,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fetchDecea, isAcessoBloqueado, isNetworkError } from './lib/decea-fetch.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const WFS_BASE = 'https://geoaisweb.decea.mil.br/geoserver/ICA/wfs';
@@ -63,29 +64,6 @@ function hasChanged(current, previous) {
   return false;
 }
 
-// Fetch resiliente: as fontes do DECEA caem com frequencia (ECONNRESET/timeout).
-// Sem isso, uma unica queda de rede derruba o run inteiro.
-async function fetchWithRetry(url, options = {}, { attempts = 4, timeoutMs = 30000 } = {}) {
-  let lastErr;
-  for (let attempt = 1; attempt <= attempts; attempt++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      return await fetch(url, { ...options, signal: controller.signal });
-    } catch (err) {
-      lastErr = err;
-      if (attempt < attempts) {
-        const backoff = 1000 * 2 ** (attempt - 1); // 1s, 2s, 4s
-        console.log(`    (rede instavel: ${err.message}; tentativa ${attempt}/${attempts}, novo try em ${backoff}ms)`);
-        await new Promise((r) => setTimeout(r, backoff));
-      }
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-  throw lastErr;
-}
-
 async function fetchLayerSummary(item) {
   const qs = new URLSearchParams({
     service: 'WFS',
@@ -95,7 +73,7 @@ async function fetchLayerSummary(item) {
     outputFormat: 'application/json',
     srsName: 'EPSG:4326',
   });
-  const res = await fetchWithRetry(`${WFS_BASE}?${qs.toString()}`);
+  const res = await fetchDecea(`${WFS_BASE}?${qs.toString()}`);
   if (!res.ok) throw new Error(`${item.layer} HTTP ${res.status}`);
   const data = await res.json();
   const features = data.features || [];
@@ -117,8 +95,8 @@ async function fetchLayerSummary(item) {
 
 async function fetchRotaerSummary() {
   const [pageRes, pdfRes] = await Promise.all([
-    fetchWithRetry(ROTAER_PAGE),
-    fetchWithRetry(ROTAER_PDF, { method: 'HEAD' }),
+    fetchDecea(ROTAER_PAGE),
+    fetchDecea(ROTAER_PDF, { method: 'HEAD' }),
   ]);
 
   let page = '';
@@ -230,6 +208,20 @@ async function main() {
       process.exit(3);
     }
 
+    // Bloqueio por politica de acesso: nem rede (insistir nao adianta) nem
+    // camada renomeada. Codigo proprio para o workflow nao mandar ninguem
+    // procurar rename de camada, como a primeira versao desta mensagem fazia.
+    const bloqueios = falhas.filter((f) => isAcessoBloqueado(f.err));
+    if (bloqueios.length) {
+      // Compara com o total de camadas, nao de falhas: com so TMA e CTR
+      // bloqueadas, "todas" seria falso e esconderia que o resto respondeu.
+      const alcance = bloqueios.length === LAYERS.length
+        ? 'todas as camadas consultadas'
+        : `as camadas ${bloqueios.map((f) => f.label).join(', ')}`;
+      relatarBloqueio(bloqueios.map((f) => f.err), alcance);
+      process.exit(5);
+    }
+
     console.log(`\nFALHA: camada(s) do GeoAISWEB inacessiveis por erro nao-transitorio: ${nomes}.`);
     console.log('Verifique se o DECEA renomeou ou removeu a camada (ja aconteceu antes;');
     console.log('veja LAYER_CANDIDATES em scripts/sync-waypoints.mjs).');
@@ -258,16 +250,23 @@ async function main() {
   }
 }
 
-// Erro de rede (fonte do DECEA fora do ar) nao e falha do projeto: sai com
-// codigo 3 para o workflow tratar como "pula hoje, tenta amanha".
-function isNetworkError(e) {
-  const code = String(e?.cause?.code || e?.code || '');
-  const msg = `${e?.message || ''} ${e?.cause?.message || ''}`;
-  return /ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|ECONNREFUSED|UND_ERR|ABORT/i.test(code)
-    || /fetch failed|network|timeout|aborted/i.test(msg);
+function relatarBloqueio(erros, alcance) {
+  const hosts = [...new Set(erros.map((e) => e.host))].join(', ');
+  const rays = [...new Set(erros.map((e) => e.cfRay).filter(Boolean))].slice(0, 3).join(', ');
+  console.log(`\nBLOQUEIO: ${hosts} recusou ${alcance} com o desafio anti-robo do Cloudflare`);
+  console.log('(HTTP 403, cf-mitigated: challenge, pagina "Just a moment...").');
+  console.log('Nao e queda de rede nem camada renomeada: e uma politica de acesso do DECEA, e');
+  console.log('enquanto ela valer os dados aeronauticos nao atualizam. A checagem diaria volta a');
+  console.log('sincronizar sozinha quando o acesso for liberado.');
+  if (rays) console.log(`Referencia para o DECEA (cf-ray): ${rays}`);
 }
 
 main().catch((e) => {
+  // O ROTAER e buscado fora do laco de camadas; um bloqueio nele chega aqui.
+  if (isAcessoBloqueado(e)) {
+    relatarBloqueio([e], 'a consulta');
+    process.exit(5);
+  }
   console.error(e);
   process.exit(isNetworkError(e) ? 3 : 1);
 });

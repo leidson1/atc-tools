@@ -7,6 +7,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fetchDecea } from './lib/decea-fetch.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const WFS_BASE = 'https://geoaisweb.decea.mil.br/geoserver/ICA/wfs';
@@ -71,7 +72,7 @@ function featureToAerodrome(feature) {
 
 async function fetchAerodromes() {
   const url = wfsUrl();
-  const res = await fetch(url);
+  const res = await fetchDecea(url);
   if (!res.ok) throw new Error(`GeoAISWEB ${LAYER} returned HTTP ${res.status}`);
 
   const data = await res.json();

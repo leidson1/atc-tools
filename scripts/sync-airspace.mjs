@@ -4,6 +4,7 @@
 import { writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fetchDecea } from './lib/decea-fetch.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const WFS_BASE = 'https://geoaisweb.decea.mil.br/geoserver/ICA/wfs';
@@ -73,7 +74,7 @@ function transformFeature(type, feature) {
 }
 
 async function fetchLayer(layer) {
-  const res = await fetch(wfsUrl(layer));
+  const res = await fetchDecea(wfsUrl(layer));
   if (!res.ok) throw new Error(`${layer} HTTP ${res.status}`);
   const data = await res.json();
   if (!data?.features?.length) throw new Error(`${layer} returned no features`);

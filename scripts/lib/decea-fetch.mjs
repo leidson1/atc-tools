@@ -13,13 +13,31 @@ export const USER_AGENT = 'ATC-Tools-DataSync/1.0 (+https://github.com/leidson1/
 // Nao e queda de rede (insistir nao adianta) nem camada renomeada (todas as
 // URLs do host respondem igual): e uma politica de acesso do DECEA.
 export class AcessoBloqueadoError extends Error {
-  constructor(url, res) {
+  constructor(url, res, tipo = 'desafio') {
     const host = new URL(url).host;
-    super(`${host} respondeu HTTP ${res.status} com desafio anti-robo do Cloudflare`);
+    const oque = tipo === 'desafio' ? 'desafio anti-robo' : 'bloqueio';
+    super(`${host} respondeu HTTP ${res.status} com ${oque} do Cloudflare`);
     this.name = 'AcessoBloqueadoError';
     this.host = host;
     this.status = res.status;
+    this.tipo = tipo;
     this.cfRay = res.headers.get('cf-ray') || null;
+  }
+}
+
+// Bloqueio na borda do Cloudflare sem desafio (regra com acao "Block", erro
+// 1020, limite de taxa 1015): vem sem `cf-mitigated`, mas com a pagina de erro
+// do proprio Cloudflare. Um erro do GeoServer repassado pelo Cloudflare tambem
+// traz `server: cloudflare`, so que com o corpo do GeoServer — por isso o teste
+// olha a assinatura da pagina, nao so o cabecalho.
+async function isBloqueioCloudflare(res) {
+  if (res.ok || ![403, 429, 503].includes(res.status)) return false;
+  if (!/cloudflare/i.test(res.headers.get('server') || '')) return false;
+  try {
+    const corpo = await res.clone().text();
+    return /cf-error-details|Cloudflare Ray ID|error code:\s*10\d\d|Attention Required! \| Cloudflare/i.test(corpo);
+  } catch {
+    return false;
   }
 }
 
@@ -51,7 +69,10 @@ export async function fetchDecea(url, options = {}, { attempts = 4, timeoutMs = 
         signal: controller.signal,
       });
       if (res.headers.get('cf-mitigated') === 'challenge') {
-        throw new AcessoBloqueadoError(url, res);
+        throw new AcessoBloqueadoError(url, res, 'desafio');
+      }
+      if (await isBloqueioCloudflare(res)) {
+        throw new AcessoBloqueadoError(url, res, 'bloqueio');
       }
       return res;
     } catch (err) {
@@ -67,4 +88,40 @@ export async function fetchDecea(url, options = {}, { attempts = 4, timeoutMs = 
     }
   }
   throw lastErr;
+}
+
+// Duas portas oficiais para o mesmo GeoServer do DECEA (workspace ICA), com as
+// mesmas camadas e contagens. Desde 22/10/2026 a .mil.br fica atras do desafio
+// anti-robo do Cloudflare; a .gov.br responde direto dos servidores do DECEA,
+// com o certificado do proprio orgao (*.decea.gov.br), e e o endereco que o
+// AISWEB usa no botao de download da pagina de Fixos. A ordem e a de
+// preferencia. A troca acontece so por bloqueio ou falha de rede — erro HTTP de
+// uma camada (404, 500) e devolvido como veio, porque e um problema real que
+// precisa aparecer, nao ser mascarado pela outra porta.
+export const WFS_BASES = [
+  'https://geoaisweb.decea.gov.br/geoserver/ICA/wfs',
+  'https://geoaisweb.decea.mil.br/geoserver/ICA/wfs',
+];
+
+export async function fetchWfs(params, options) {
+  const qs = new URLSearchParams(params).toString();
+  const falhas = [];
+  for (const base of WFS_BASES) {
+    try {
+      return { res: await fetchDecea(`${base}?${qs}`, options), base };
+    } catch (e) {
+      if (!isAcessoBloqueado(e) && !isNetworkError(e)) throw e;
+      falhas.push(e);
+    }
+  }
+  // Todas as portas falharam. Se alguma caiu por rede, e transitorio: melhor
+  // "pula hoje, tenta amanha" do que anunciar bloqueio definitivo. So e
+  // bloqueio quando todas responderam com a barreira do Cloudflare.
+  const rede = falhas.find((e) => isNetworkError(e));
+  if (rede) throw rede;
+  // Todas bloquearam: o erro carrega as demais portas, para o relatorio dizer
+  // que nenhuma porta passou — e nao so a primeira.
+  const [primeiro, ...outros] = falhas;
+  primeiro.outros = outros;
+  throw primeiro;
 }

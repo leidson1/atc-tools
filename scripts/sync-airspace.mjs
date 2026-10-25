@@ -4,10 +4,9 @@
 import { writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fetchDecea } from './lib/decea-fetch.mjs';
+import { fetchWfs } from './lib/decea-fetch.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const WFS_BASE = 'https://geoaisweb.decea.mil.br/geoserver/ICA/wfs';
 
 const LAYERS = [
   { type: 'fir', layer: 'ICA:fir', path: 'src/fir-boundaries.json' },
@@ -15,8 +14,8 @@ const LAYERS = [
   { type: 'ctr', layer: 'ICA:CTR', path: 'src/ctr-boundaries.json' },
 ];
 
-function wfsUrl(layer) {
-  const qs = new URLSearchParams({
+function wfsParams(layer) {
+  return new URLSearchParams({
     service: 'WFS',
     version: '2.0.0',
     request: 'GetFeature',
@@ -24,7 +23,6 @@ function wfsUrl(layer) {
     outputFormat: 'application/json',
     srsName: 'EPSG:4326',
   });
-  return `${WFS_BASE}?${qs.toString()}`;
 }
 
 function titleCase(value) {
@@ -74,7 +72,8 @@ function transformFeature(type, feature) {
 }
 
 async function fetchLayer(layer) {
-  const res = await fetchDecea(wfsUrl(layer));
+  const { res, base } = await fetchWfs(wfsParams(layer));
+  console.log(`  ${layer} via ${new URL(base).host}`);
   if (!res.ok) throw new Error(`${layer} HTTP ${res.status}`);
   const data = await res.json();
   if (!data?.features?.length) throw new Error(`${layer} returned no features`);

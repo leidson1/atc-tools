@@ -10,7 +10,7 @@ on:
     branches:
       - claude/setup-local-development-hDh47
     paths:
-      - scripts/diag-fontes.mjs
+      - scripts/**
 
 permissions:
   contents: read
@@ -32,6 +32,23 @@ jobs:
 
       - name: Map alternative official sources on AISWEB
         run: node scripts/diag-fontes.mjs govbr
+
+      - name: End-to-end sync against the real DECEA (dry run, no commit)
+        shell: bash
+        run: |
+          npm ci --no-audit --no-fund
+          set +e
+          npm run data:sync; echo ">>> data:sync exit=$?"
+          node scripts/check-data.mjs --fail-on-change; echo ">>> check-data exit=$?"
+          echo "--- arquivos de dados comparados com o que esta no repositorio ---"
+          for f in src/data/aerodromes.json src/data/waypoints.json src/tma-boundaries.json src/ctr-boundaries.json src/fir-boundaries.json; do
+            if git diff --quiet -- "$f"; then echo "  identico: $f"; else echo "  MUDOU:    $f"; git diff --stat -- "$f" | tail -1; fi
+          done
+          echo "--- metadata gerado ---"
+          jq '{fonte: .sources.geoserver_wfs, aerodromos: .layers."ICA:airport_heliport".officialCount,
+               tma: .layers."ICA:TMA".amendment, futura_tma: .layers."ICA:TMA".futureAmendment}' src/data/metadata.json
+          git status --porcelain
+          exit 0
 
       - name: Probe with curl (different TLS/HTTP stack)
         shell: bash

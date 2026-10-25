@@ -4,10 +4,9 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fetchDecea, isAcessoBloqueado, isNetworkError } from './lib/decea-fetch.mjs';
+import { WFS_BASES, fetchDecea, fetchWfs, isAcessoBloqueado, isNetworkError } from './lib/decea-fetch.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const WFS_BASE = 'https://geoaisweb.decea.mil.br/geoserver/ICA/wfs';
 const ROTAER_PAGE = 'https://aisweb.decea.mil.br/?i=aerodromos&tab=rotaer';
 const ROTAER_PDF = 'https://aisweb.decea.mil.br/downloads/rotaer/rotaer_completo.pdf';
 const METADATA_PATH = resolve(ROOT, 'src/data/metadata.json');
@@ -64,6 +63,9 @@ function hasChanged(current, previous) {
   return false;
 }
 
+// Portas do WFS que de fato responderam nesta checagem (ver WFS_BASES).
+const basesUsadas = new Set();
+
 async function fetchLayerSummary(item) {
   const qs = new URLSearchParams({
     service: 'WFS',
@@ -73,7 +75,8 @@ async function fetchLayerSummary(item) {
     outputFormat: 'application/json',
     srsName: 'EPSG:4326',
   });
-  const res = await fetchDecea(`${WFS_BASE}?${qs.toString()}`);
+  const { res, base } = await fetchWfs(qs);
+  basesUsadas.add(base);
   if (!res.ok) throw new Error(`${item.layer} HTTP ${res.status}`);
   const data = await res.json();
   const features = data.features || [];
@@ -125,7 +128,7 @@ async function main() {
     sources: {
       rotaer_page: ROTAER_PAGE,
       rotaer_pdf: ROTAER_PDF,
-      geoserver_wfs: WFS_BASE,
+      geoserver_wfs: WFS_BASES[0],
     },
     rotaer: null,
     layers: {},
@@ -196,6 +199,15 @@ async function main() {
     }
   }
 
+  if (basesUsadas.size) {
+    // Registra a porta que de fato serviu os dados; se um dia ela trocar
+    // (por bloqueio ou queda), isso fica visivel no log e no historico.
+    metadata.sources.geoserver_wfs = [...basesUsadas].join(', ');
+    const hosts = [...basesUsadas].map((b) => new URL(b).host).join(', ');
+    const reserva = !basesUsadas.has(WFS_BASES[0]);
+    console.log(`  Servidor WFS: ${hosts}${reserva ? ' (porta reserva: a principal falhou)' : ''}`);
+  }
+
   if (falhas.length) {
     const nomes = falhas.map((f) => f.label).join(', ');
 
@@ -250,11 +262,16 @@ async function main() {
   }
 }
 
-function relatarBloqueio(erros, alcance) {
+function relatarBloqueio(errosBrutos, alcance) {
+  // Cada erro pode trazer as outras portas do WFS que tambem bloquearam.
+  const erros = errosBrutos.flatMap((e) => [e, ...(e.outros || [])]);
   const hosts = [...new Set(erros.map((e) => e.host))].join(', ');
   const rays = [...new Set(erros.map((e) => e.cfRay).filter(Boolean))].slice(0, 3).join(', ');
-  console.log(`\nBLOQUEIO: ${hosts} recusou ${alcance} com o desafio anti-robo do Cloudflare`);
-  console.log('(HTTP 403, cf-mitigated: challenge, pagina "Just a moment...").');
+  const desafio = erros.some((e) => e.tipo === 'desafio');
+  console.log(`\nBLOQUEIO em ${hosts}: ${alcance} recusada(s) com ${desafio ? 'o desafio anti-robo' : 'um bloqueio'} do Cloudflare`);
+  console.log(desafio
+    ? '(HTTP 403, cf-mitigated: challenge, pagina "Just a moment...").'
+    : `(HTTP ${erros[0].status} com a pagina de erro do Cloudflare, ex.: erro 1020 ou 1015).`);
   console.log('Nao e queda de rede nem camada renomeada: e uma politica de acesso do DECEA, e');
   console.log('enquanto ela valer os dados aeronauticos nao atualizam. A checagem diaria volta a');
   console.log('sincronizar sozinha quando o acesso for liberado.');

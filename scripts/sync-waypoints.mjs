@@ -7,12 +7,12 @@
 // The DECEA GeoServer publishes aeronautical waypoints as a WFS layer with
 // GeoJSON output. The exact layer name may change over time — if this stops
 // returning data, check the layer name at:
-//   https://geoaisweb.decea.mil.br/geoserver/web/
+//   https://geoaisweb.decea.gov.br/geoserver/web/
 
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fetchDecea } from './lib/decea-fetch.mjs';
+import { WFS_BASES, fetchWfs } from './lib/decea-fetch.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -25,7 +25,6 @@ const LAYER_CANDIDATES = [
   'ICA:wpt',
 ];
 
-const WFS_BASE = 'https://geoaisweb.decea.mil.br/geoserver/ICA/wfs';
 
 async function tryFetchLayer(layer) {
   const params = new URLSearchParams({
@@ -36,9 +35,9 @@ async function tryFetchLayer(layer) {
     outputFormat: 'application/json',
     srsName: 'EPSG:4326',
   });
-  const url = `${WFS_BASE}?${params.toString()}`;
   console.log(`Tentando layer: ${layer}`);
-  const res = await fetchDecea(url);
+  const { res, base } = await fetchWfs(params);
+  console.log(`  -> via ${new URL(base).host}`);
   if (!res.ok) {
     console.warn(`  -> HTTP ${res.status}`);
     return null;
@@ -97,7 +96,7 @@ async function main() {
   if (!payload?.features?.length) {
     console.error(
       'Nenhuma camada de waypoints retornou dados.\n' +
-      'Verifique os nomes de layer em https://geoaisweb.decea.mil.br/geoserver/web/ ' +
+      `Verifique os nomes de layer em ${WFS_BASES[0].replace(/ICA\/wfs$/, 'web/')} ` +
       'e edite LAYER_CANDIDATES neste script.'
     );
     process.exit(1);

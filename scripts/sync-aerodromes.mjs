@@ -7,14 +7,13 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fetchDecea } from './lib/decea-fetch.mjs';
+import { fetchWfs } from './lib/decea-fetch.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const WFS_BASE = 'https://geoaisweb.decea.mil.br/geoserver/ICA/wfs';
 const LAYER = 'ICA:airport_heliport';
 
-function wfsUrl(params = {}) {
-  const qs = new URLSearchParams({
+function wfsParams(params = {}) {
+  return new URLSearchParams({
     service: 'WFS',
     version: '2.0.0',
     request: 'GetFeature',
@@ -23,7 +22,6 @@ function wfsUrl(params = {}) {
     srsName: 'EPSG:4326',
     ...params,
   });
-  return `${WFS_BASE}?${qs.toString()}`;
 }
 
 function asNumber(value) {
@@ -71,8 +69,8 @@ function featureToAerodrome(feature) {
 }
 
 async function fetchAerodromes() {
-  const url = wfsUrl();
-  const res = await fetchDecea(url);
+  const { res, base } = await fetchWfs(wfsParams());
+  console.log(`Servidor WFS: ${new URL(base).host}`);
   if (!res.ok) throw new Error(`GeoAISWEB ${LAYER} returned HTTP ${res.status}`);
 
   const data = await res.json();

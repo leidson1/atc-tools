@@ -45,9 +45,26 @@ export function isAcessoBloqueado(e) {
   return e instanceof AcessoBloqueadoError;
 }
 
+// Resposta de gateway dizendo que o servidor de origem nao respondeu: 502/504
+// de qualquer proxy, 503 (indisponivel) e os 520-526 do Cloudflare ("origem
+// inalcancavel", "timeout de origem"...). Na pratica e o servidor fora do ar,
+// e precisa ser tratado como falha de rede — repetido, e "pula hoje" se nao
+// voltar — e nao como camada quebrada. Sem isso, com a .gov.br fora por rede e
+// o Cloudflare da .mil.br respondendo 522, o alarme diria "camada renomeada".
+const STATUS_ORIGEM_INDISPONIVEL = new Set([502, 503, 504, 520, 521, 522, 523, 524, 525, 526]);
+
+export class OrigemIndisponivelError extends Error {
+  constructor(url, res) {
+    super(`${new URL(url).host} respondeu HTTP ${res.status} (servidor de origem indisponivel)`);
+    this.name = 'OrigemIndisponivelError';
+    this.status = res.status;
+  }
+}
+
 // Erro de rede (fonte fora do ar) nao e falha do projeto.
 export function isNetworkError(e) {
   if (isAcessoBloqueado(e)) return false;
+  if (e instanceof OrigemIndisponivelError) return true;
   const code = String(e?.cause?.code || e?.code || '');
   const msg = `${e?.message || ''} ${e?.cause?.message || ''}`;
   return /ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|ECONNREFUSED|UND_ERR|ABORT/i.test(code)
@@ -55,8 +72,9 @@ export function isNetworkError(e) {
 }
 
 // Fetch resiliente: as fontes do DECEA caem com frequencia (ECONNRESET/timeout),
-// entao falha de rede e repetida com backoff. Resposta HTTP nao e repetida, e
-// desafio do Cloudflare vira AcessoBloqueadoError na primeira resposta.
+// entao falha de rede — e gateway avisando que a origem caiu — e repetida com
+// backoff. Demais respostas HTTP nao sao repetidas, e desafio ou bloqueio do
+// Cloudflare vira AcessoBloqueadoError na primeira resposta.
 export async function fetchDecea(url, options = {}, { attempts = 4, timeoutMs = 30000 } = {}) {
   let lastErr;
   for (let attempt = 1; attempt <= attempts; attempt++) {
@@ -73,6 +91,11 @@ export async function fetchDecea(url, options = {}, { attempts = 4, timeoutMs = 
       }
       if (await isBloqueioCloudflare(res)) {
         throw new AcessoBloqueadoError(url, res, 'bloqueio');
+      }
+      // Depois do teste de bloqueio: um 503 com a pagina de erro do
+      // Cloudflare e bloqueio; um 503 qualquer e servidor indisponivel.
+      if (STATUS_ORIGEM_INDISPONIVEL.has(res.status)) {
+        throw new OrigemIndisponivelError(url, res);
       }
       return res;
     } catch (err) {

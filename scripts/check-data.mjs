@@ -76,8 +76,9 @@ async function fetchLayerSummary(item) {
     srsName: 'EPSG:4326',
   });
   const { res, base } = await fetchWfs(qs);
-  basesUsadas.add(base);
   if (!res.ok) throw new Error(`${item.layer} HTTP ${res.status}`);
+  // So conta como porta usada a que de fato entregou a camada.
+  basesUsadas.add(base);
   const data = await res.json();
   const features = data.features || [];
   const amendments = features.map((f) => f.properties?.emenda);

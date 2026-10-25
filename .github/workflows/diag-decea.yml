@@ -2,15 +2,11 @@ name: Diagnose DECEA access
 
 # Sondagem manual das fontes do DECEA a partir do runner do GitHub, para
 # incidentes de acesso (ex.: HTTP 403 no GeoAISWEB em 23/10/2026). Rodar em
-# Actions > Diagnose DECEA access > Run workflow e ler o RESUMO no log.
+# Actions > Diagnose DECEA access > Run workflow. Mostra como cada porta do
+# GeoAISWEB responde (.mil.br e .gov.br) e faz uma sincronizacao completa de
+# ensaio, sem commitar nada, comparando o resultado com o que esta publicado.
 on:
   workflow_dispatch:
-  # Temporario: dispara nesta branch enquanto o mapeamento de fontes e feito.
-  push:
-    branches:
-      - claude/setup-local-development-hDh47
-    paths:
-      - scripts/**
 
 permissions:
   contents: read
